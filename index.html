@@ -45,6 +45,8 @@ img,svg{max-width:100%;}
 .preset-btn{flex:1;min-width:110px;background:rgba(212,166,42,0.12);border:1px solid var(--gold);color:var(--gold-light);padding:12px 8px;border-radius:12px;cursor:pointer;font-weight:600;font-size:0.95rem;transition:.15s;}
 .preset-btn:hover{background:rgba(212,166,42,0.28);}
 .preset-sub{display:block;font-size:0.72rem;font-weight:400;color:#cfd8c9;margin-top:2px;}
+.mode-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;}
+.mode-btn.active{background:rgba(212,166,42,0.32);box-shadow:0 0 0 2px var(--gold);}
 
 .player-slot{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,0.22);border-radius:12px;padding:10px 12px;margin-bottom:8px;border-left:5px solid var(--p0);}
 .player-slot.off{opacity:0.45;}
@@ -176,40 +178,80 @@ img,svg{max-width:100%;}
     <p>가족과 함께 떠나는 세계여행 보드게임 · 1인 ~ 4인용</p>
   </div>
 
-  <div class="preset-row">
-    <button class="preset-btn" data-preset="1">1인용<span class="preset-sub">나 vs 컴퓨터 1명</span></button>
-    <button class="preset-btn" data-preset="2">2인용<span class="preset-sub">가족 2명</span></button>
-    <button class="preset-btn" data-preset="3">3인용<span class="preset-sub">가족 3명</span></button>
-    <button class="preset-btn" data-preset="4">4인용<span class="preset-sub">가족 4명</span></button>
+  <div class="mode-row">
+    <button class="preset-btn mode-btn active" id="modeLocalBtn">📱 한 기기로 같이하기<span class="preset-sub">폰 하나 돌려가며 플레이</span></button>
+    <button class="preset-btn mode-btn" id="modeOnlineBtn">🌐 각자 폰으로 하기<span class="preset-sub">방 코드로 실시간 연결</span></button>
   </div>
 
-  <div id="playerSlots"></div>
+  <div id="onlineSubRow" class="mode-row hidden">
+    <button class="preset-btn" id="onlineHostBtn">🏠 방 만들기<span class="preset-sub">내가 방장이 돼요</span></button>
+    <button class="preset-btn" id="onlineJoinBtn">🔑 방 참가하기<span class="preset-sub">방 코드로 들어가요</span></button>
+  </div>
 
-  <div class="setup-options">
+  <div id="joinCodeBox" class="hidden">
     <div class="opt-group">
-      <label>시작 자금</label>
-      <select id="optCash">
-        <option value="10000000">1,000만원 (빠른 게임)</option>
-        <option value="15000000" selected>1,500만원 (기본)</option>
-        <option value="20000000">2,000만원 (여유있게)</option>
-      </select>
+      <label>방 코드 (5자리)</label>
+      <input id="joinCodeInput" maxlength="5" placeholder="예: AB3K9" style="width:100%;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:var(--cream);font-size:1.1rem;text-align:center;letter-spacing:4px;text-transform:uppercase;">
     </div>
     <div class="opt-group">
-      <label>게임 길이</label>
-      <select id="optLaps">
-        <option value="0">무제한 (파산자 가릴 때까지)</option>
-        <option value="20">20바퀴 후 자산 비교</option>
-        <option value="30" selected>30바퀴 후 자산 비교</option>
-        <option value="40">40바퀴 후 자산 비교</option>
-      </select>
+      <label>내 이름</label>
+      <input id="joinNameInput" maxlength="8" placeholder="내 이름" style="width:100%;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:var(--cream);font-size:0.95rem;">
+    </div>
+    <div class="setup-warn" id="joinWarn"></div>
+    <button class="btn-main" id="joinSubmitBtn" style="width:100%;margin-top:6px;">참가하기</button>
+  </div>
+
+  <div id="configBody">
+    <div class="preset-row">
+      <button class="preset-btn" data-preset="1">1인용<span class="preset-sub">나 vs 컴퓨터 1명</span></button>
+      <button class="preset-btn" data-preset="2">2인용<span class="preset-sub">가족 2명</span></button>
+      <button class="preset-btn" data-preset="3">3인용<span class="preset-sub">가족 3명</span></button>
+      <button class="preset-btn" data-preset="4">4인용<span class="preset-sub">가족 4명</span></button>
+    </div>
+
+    <div id="playerSlots"></div>
+
+    <div class="setup-options">
+      <div class="opt-group">
+        <label>시작 자금</label>
+        <select id="optCash">
+          <option value="10000000">1,000만원 (빠른 게임)</option>
+          <option value="15000000" selected>1,500만원 (기본)</option>
+          <option value="20000000">2,000만원 (여유있게)</option>
+        </select>
+      </div>
+      <div class="opt-group">
+        <label>게임 길이</label>
+        <select id="optLaps">
+          <option value="0">무제한 (파산자 가릴 때까지)</option>
+          <option value="20">20바퀴 후 자산 비교</option>
+          <option value="30" selected>30바퀴 후 자산 비교</option>
+          <option value="40">40바퀴 후 자산 비교</option>
+        </select>
+      </div>
     </div>
   </div>
 
   <div class="setup-warn" id="setupWarn"></div>
-  <div class="setup-actions">
+  <div class="setup-actions" id="setupActionsRow">
     <button class="btn-main" id="startBtn">게임 시작</button>
     <button class="btn-ghost" id="continueBtn">이어서 하기</button>
     <button class="btn-ghost" id="rulesBtnSetup">게임 규칙 보기</button>
+  </div>
+</div>
+
+<!-- ============ LOBBY SCREEN (online mode waiting room) ============ -->
+<div class="setup-wrap hidden" id="lobbyScreen">
+  <div class="setup-title">
+    <h1>🌍 대기실</h1>
+    <p>가족에게 아래 방 코드를 알려주고, 각자 폰에서 "각자 폰으로 하기 → 방 참가하기"로 들어오게 하세요.</p>
+  </div>
+  <div id="roomCodeDisplay" style="text-align:center;font-size:2.4rem;font-weight:800;letter-spacing:10px;color:var(--gold-light);background:rgba(0,0,0,0.25);border-radius:12px;padding:14px;margin-bottom:16px;"></div>
+  <div id="lobbySeats"></div>
+  <div class="setup-actions" style="margin-top:16px;">
+    <button class="btn-main hidden" id="lobbyStartBtn">게임 시작</button>
+    <div class="setup-warn hidden" id="lobbyGuestMsg" style="color:#cfd8c9;">방장이 게임을 시작하길 기다리는 중…</div>
+    <button class="btn-ghost" id="lobbyLeaveBtn">나가기</button>
   </div>
 </div>
 
@@ -250,7 +292,43 @@ img,svg{max-width:100%;}
 <!-- generic modal root -->
 <div id="modalRoot"></div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+
+/* =========================================================
+   FIREBASE (online multiplayer — room-code based, no login)
+========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyDI7uISLpgWd4vmi9hQy-lFV6TrwrvWhCY",
+  authDomain: "buru-marble.firebaseapp.com",
+  databaseURL: "https://buru-marble-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "buru-marble",
+};
+const fbApp = initializeApp(firebaseConfig);
+const fbDb = getDatabase(fbApp);
+const ROOM_KEY = 'burumarble_room_v1';
+
+function getClientId(){
+  let id = localStorage.getItem('burumarble_client_id');
+  if(!id){ id = 'c'+Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem('burumarble_client_id', id); }
+  return id;
+}
+const MY_CLIENT_ID = getClientId();
+
+function genRoomCode(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s=''; for(let i=0;i<5;i++) s+=chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+
+function canIControl(p){
+  return !!p && p.human && (!G || !G.online || p.clientId===MY_CLIENT_ID);
+}
+function isHost(){
+  return !G || !G.online || G.hostClientId===MY_CLIENT_ID;
+}
+
 /* =========================================================
    DATA
 ========================================================= */
@@ -425,6 +503,7 @@ const slotDefaults = [
   {name:'플레이어4', human:false, on:false},
 ];
 let slots = JSON.parse(JSON.stringify(slotDefaults));
+const hasLocalSave = !!loadSave();
 
 function renderSlots(){
   const root = document.getElementById('playerSlots');
@@ -456,7 +535,7 @@ document.getElementById('playerSlots').addEventListener('input', e=>{
   const inp = e.target.closest('input'); if(!inp) return;
   slots[+inp.dataset.i].name = inp.value;
 });
-document.querySelectorAll('.preset-btn').forEach(btn=>{
+document.querySelectorAll('.preset-row .preset-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const n = +btn.dataset.preset;
     slots = JSON.parse(JSON.stringify(slotDefaults));
@@ -469,10 +548,40 @@ document.querySelectorAll('.preset-btn').forEach(btn=>{
 });
 renderSlots();
 
+/* ---- mode toggle: local pass-and-play vs online (separate phones) ---- */
+let setupMode = 'local'; // 'local' | 'online'
+let onlineSub = null; // null | 'host' | 'join'
+function updateSetupVisibility(){
+  document.getElementById('modeLocalBtn').classList.toggle('active', setupMode==='local');
+  document.getElementById('modeOnlineBtn').classList.toggle('active', setupMode==='online');
+  document.getElementById('onlineSubRow').classList.toggle('hidden', setupMode!=='online');
+  const showConfig = setupMode==='local' || (setupMode==='online' && onlineSub==='host');
+  document.getElementById('configBody').classList.toggle('hidden', !showConfig);
+  document.getElementById('joinCodeBox').classList.toggle('hidden', !(setupMode==='online' && onlineSub==='join'));
+  document.getElementById('setupActionsRow').classList.toggle('hidden', !showConfig);
+  document.getElementById('continueBtn').classList.toggle('hidden', setupMode!=='local' || !hasLocalSave);
+  document.getElementById('startBtn').textContent = (setupMode==='online') ? '🏠 방 만들기' : '게임 시작';
+  document.getElementById('setupWarn').textContent = '';
+  document.getElementById('onlineHostBtn').classList.toggle('active', onlineSub==='host');
+  document.getElementById('onlineJoinBtn').classList.toggle('active', onlineSub==='join');
+}
+document.getElementById('modeLocalBtn').addEventListener('click', ()=>{ setupMode='local'; onlineSub=null; updateSetupVisibility(); });
+document.getElementById('modeOnlineBtn').addEventListener('click', ()=>{ setupMode='online'; onlineSub=null; updateSetupVisibility(); });
+document.getElementById('onlineHostBtn').addEventListener('click', ()=>{ onlineSub='host'; updateSetupVisibility(); });
+document.getElementById('onlineJoinBtn').addEventListener('click', ()=>{ onlineSub='join'; updateSetupVisibility(); });
+updateSetupVisibility();
+
 document.getElementById('startBtn').addEventListener('click', ()=>{
   const active = slots.map((s,i)=>({...s, idx:i})).filter(s=>s.on);
   if(active.length<2){ document.getElementById('setupWarn').textContent = '최소 2명(본인 + 컴퓨터 포함)이 있어야 게임을 시작할 수 있어요.'; return; }
-  startGame(active);
+  if(setupMode==='online'){ createRoom(active); }
+  else{ startGame(active); }
+});
+document.getElementById('joinSubmitBtn').addEventListener('click', ()=>{
+  const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+  const name = document.getElementById('joinNameInput').value.trim();
+  if(code.length!==5){ document.getElementById('joinWarn').textContent = '방 코드 5자리를 입력해주세요.'; return; }
+  joinRoom(code, name);
 });
 document.getElementById('continueBtn').addEventListener('click', ()=>{
   const saved = loadSave();
@@ -483,7 +592,6 @@ document.getElementById('continueBtn').addEventListener('click', ()=>{
   renderAll();
   log('저장된 게임을 이어서 시작합니다.');
 });
-if(!loadSave()) document.getElementById('continueBtn').style.display='none';
 
 document.getElementById('rulesBtnSetup').addEventListener('click', showRulesModal);
 document.getElementById('rulesBtnGame').addEventListener('click', showRulesModal);
@@ -494,13 +602,12 @@ document.getElementById('newGameBtn').addEventListener('click', ()=>{
   document.getElementById('mOk').onclick = ()=>{ localStorage.removeItem(SAVE_KEY); closeModal(); location.reload(); };
 });
 
-function startGame(active){
-  const cash = +document.getElementById('optCash').value;
-  const laps = +document.getElementById('optLaps').value;
-  G = {
+function buildInitialState(active, cash, laps){
+  return {
     players: active.map((s,i)=>({
       id:i, name:s.name||('플레이어'+(i+1)), human:s.human, token:TOKENS[s.idx], color:PCOLORS[s.idx],
       cash, position:0, bankrupt:false, inIsland:false, islandTurns:0, escapeCards:0, consecDoubles:0,
+      clientId: s.human ? null : 'AI',
     })),
     tileState: newTileState(),
     deck: freshDeck(),
@@ -510,27 +617,208 @@ function startGame(active){
     lap: 0,
     maxLaps: laps,
     logs: [],
-    phase: 'idle', // idle | rolling | moving | resolving
+    phase: 'idle', // idle | rolling | moving | resolving | postroll | gameover
     dice: [1,1],
+    online: false,
+    roomCode: null,
+    hostClientId: null,
+    started: true,
   };
+}
+
+function startGame(active){
+  const cash = +document.getElementById('optCash').value;
+  const laps = +document.getElementById('optLaps').value;
+  G = buildInitialState(active, cash, laps);
   showGameScreen();
   renderBoardOnce();
   log(`게임 시작! 참가자: ${G.players.map(p=>p.name+(p.human?'':'(AI)')).join(', ')}`);
   renderAll();
-  saveGame();
   maybeAutoplay();
 }
 
 function showGameScreen(){
   document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('lobbyScreen').classList.add('hidden');
   document.getElementById('gameScreen').classList.remove('hidden');
 }
 
 function saveGame(){
+  if(G && G.online){ pushState(); return; }
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(G)); }catch(e){}
 }
 function loadSave(){
   try{ const raw = localStorage.getItem(SAVE_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
+}
+
+/* =========================================================
+   ONLINE MULTIPLAYER (Firebase Realtime DB, room-code based)
+========================================================= */
+let roomUnsub = null;
+let aiDriveLock = false;
+
+/* Stored as a single JSON string blob (not a native RTDB tree) — RTDB silently
+   drops empty arrays and treats null array elements as deleted keys, which
+   corrupts tileState/logs/deck if stored as nested objects. A string sidesteps
+   all of that. */
+function stateRef(code){ return ref(fbDb, 'rooms/'+code+'/stateJson'); }
+
+let writeSeq = 0;
+let lastSentWriterTag = null;
+function pushState(){
+  if(!G || !G.online || !G.roomCode) return;
+  const tag = MY_CLIENT_ID+':'+(++writeSeq);
+  lastSentWriterTag = tag;
+  G.__writer = tag;
+  set(stateRef(G.roomCode), JSON.stringify(G)).catch(e=>console.error('sync error', e));
+}
+
+async function fetchRoomState(code){
+  const snap = await get(stateRef(code));
+  if(!snap.exists()) return null;
+  try{ return JSON.parse(snap.val()); }catch(e){ return null; }
+}
+
+async function generateUniqueRoomCode(){
+  for(let i=0;i<5;i++){
+    const code = genRoomCode();
+    const existing = await fetchRoomState(code);
+    if(!existing) return code;
+  }
+  return genRoomCode()+Date.now().toString(36).slice(-2);
+}
+
+async function createRoom(active){
+  const cash = +document.getElementById('optCash').value;
+  const laps = +document.getElementById('optLaps').value;
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('setupWarn').textContent = '방을 만드는 중…';
+  const code = await generateUniqueRoomCode();
+  G = buildInitialState(active, cash, laps);
+  G.online = true;
+  G.roomCode = code;
+  G.hostClientId = MY_CLIENT_ID;
+  G.started = false;
+  const mySlot = G.players.find(p=>p.human);
+  if(mySlot) mySlot.clientId = MY_CLIENT_ID;
+  localStorage.setItem(ROOM_KEY, code);
+  document.getElementById('startBtn').disabled = false;
+  await set(stateRef(code), JSON.stringify(G));
+  subscribeRoom(code);
+}
+
+async function joinRoom(code, name, silent){
+  const remote = await fetchRoomState(code);
+  if(!remote){
+    if(!silent) document.getElementById('joinWarn').textContent = '방을 찾을 수 없어요. 코드를 다시 확인해주세요.';
+    else localStorage.removeItem(ROOM_KEY);
+    return;
+  }
+  G = remote;
+  G.roomCode = code;
+  localStorage.setItem(ROOM_KEY, code);
+  // reconnect: do I already own a seat?
+  const mine = G.players.find(p=>p.clientId===MY_CLIENT_ID);
+  if(!mine && !G.started){
+    const openSeat = G.players.find(p=>p.human && !p.clientId);
+    if(openSeat){
+      openSeat.clientId = MY_CLIENT_ID;
+      openSeat.name = name || openSeat.name;
+      await set(stateRef(code), JSON.stringify(G));
+    } else if(!silent){
+      document.getElementById('joinWarn').textContent = '이 방은 이미 자리가 다 찼어요.';
+      return;
+    }
+  }
+  subscribeRoom(code);
+}
+
+function subscribeRoom(code){
+  if(roomUnsub){ roomUnsub(); roomUnsub=null; }
+  roomUnsub = onValue(stateRef(code), snap=>{
+    if(!snap.exists()){ return; }
+    let parsed;
+    try{ parsed = JSON.parse(snap.val()); }catch(e){ return; }
+    if(parsed.__writer && parsed.__writer===lastSentWriterTag){ return; } // our own echo — already applied locally, don't detach in-flight refs
+    G = parsed;
+    G.roomCode = code;
+    if(G.started){
+      if(document.getElementById('gameScreen').classList.contains('hidden')){
+        showGameScreen();
+        renderBoardOnce();
+      }
+      renderAll(true);
+      maybeDriveTurn();
+    } else {
+      renderLobby();
+    }
+  });
+}
+
+function renderLobby(){
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('gameScreen').classList.add('hidden');
+  document.getElementById('lobbyScreen').classList.remove('hidden');
+  document.getElementById('roomCodeDisplay').textContent = G.roomCode;
+  const seatsRoot = document.getElementById('lobbySeats');
+  seatsRoot.innerHTML = G.players.map((p,i)=>{
+    const mine = p.clientId===MY_CLIENT_ID;
+    let status;
+    if(!p.human) status = '🤖 컴퓨터';
+    else if(p.clientId) status = mine ? `✅ 나 (${p.name})` : `✅ ${p.name} 참가완료`;
+    else status = '⏳ 비어있음 (참가 대기중)';
+    const canClaim = p.human && !p.clientId && !G.players.some(x=>x.clientId===MY_CLIENT_ID);
+    return `<div class="player-slot" style="border-left-color:${p.color}">
+      <div class="slot-token">${p.token}</div>
+      <div style="flex:1">${status}</div>
+      ${canClaim?`<button data-claim="${i}" class="btn-ghost" style="padding:8px 12px;flex:none;">이 자리로 참가</button>`:''}
+    </div>`;
+  }).join('');
+  seatsRoot.querySelectorAll('[data-claim]').forEach(b=>{
+    b.onclick = async ()=>{
+      const idx = +b.dataset.claim;
+      const name = (prompt('이름을 입력하세요', G.players[idx].name) || G.players[idx].name).slice(0,8);
+      const fresh = await fetchRoomState(G.roomCode);
+      if(!fresh) return;
+      fresh.players[idx].clientId = MY_CLIENT_ID;
+      fresh.players[idx].name = name;
+      fresh.roomCode = G.roomCode;
+      await set(stateRef(G.roomCode), JSON.stringify(fresh));
+    };
+  });
+  const amHost = G.hostClientId===MY_CLIENT_ID;
+  document.getElementById('lobbyStartBtn').classList.toggle('hidden', !amHost);
+  document.getElementById('lobbyGuestMsg').classList.toggle('hidden', amHost);
+}
+
+document.getElementById('lobbyStartBtn').addEventListener('click', async ()=>{
+  G.players.forEach(p=>{ if(p.human && !p.clientId){ p.human=false; p.clientId='AI'; p.name = '컴퓨터('+p.name+')'; } });
+  G.started = true;
+  G.phase = 'idle';
+  await pushState();
+});
+document.getElementById('lobbyLeaveBtn').addEventListener('click', ()=>{
+  if(roomUnsub){ roomUnsub(); roomUnsub=null; }
+  localStorage.removeItem(ROOM_KEY);
+  location.reload();
+});
+
+function maybeDriveTurn(){
+  if(!G || G.phase==='gameover' || !G.started) return;
+  const p = currentPlayer();
+  if(!p || p.bankrupt) return;
+  if(p.inIsland){
+    if(canIControl(p)) showIslandModal(p);
+    else if(!p.human && isHost() && !aiDriveLock){
+      aiDriveLock = true;
+      (async()=>{ await sleep(400); await aiHandleIsland(p); aiDriveLock=false; })();
+    }
+    return;
+  }
+  if(!p.human && isHost() && G.phase==='idle' && !aiDriveLock){
+    aiDriveLock = true;
+    (async()=>{ await sleep(500); await aiTakeTurn(p); aiDriveLock=false; })();
+  }
 }
 
 /* =========================================================
@@ -651,7 +939,7 @@ function renderSidePanel(){
       if(myProps.length===0){ propRoot.innerHTML = '<div class="pc-prop-row">보유한 자산이 없습니다.</div>'; }
       myProps.forEach(({t,i})=>{
         const ts = G.tileState[i];
-        const canManage = isCurrent && p.human && (G.phase==='idle' || G.phase==='postroll');
+        const canManage = isCurrent && canIControl(p) && (G.phase==='idle' || G.phase==='postroll');
         const canBuild = canManage && t.type==='city' && !ts.mortgaged;
         const canMortgage = canManage && !ts.mortgaged && ts.level===0 && !ts.landmark;
         const canUnmortgage = canManage && ts.mortgaged;
@@ -675,7 +963,7 @@ function renderSidePanel(){
 }
 
 function renderLog(){
-  document.getElementById('logBox').innerHTML = G.logs.map(l=>`<div>${l}</div>`).join('');
+  document.getElementById('logBox').innerHTML = (G.logs||[]).map(l=>`<div>${l}</div>`).join('');
 }
 
 function renderDice(){
@@ -703,13 +991,14 @@ function renderButtons(){
   const p = currentPlayer();
   const rollBtn = document.getElementById('rollBtn');
   const endBtn = document.getElementById('endTurnBtn');
-  const canRollNow = p && p.human && !p.bankrupt && G.phase==='idle' && !p.inIsland;
+  const iControl = canIControl(p);
+  const canRollNow = p && iControl && !p.bankrupt && G.phase==='idle' && !p.inIsland;
   rollBtn.disabled = !canRollNow;
-  rollBtn.classList.toggle('hidden', !(p && p.human));
-  endBtn.classList.toggle('hidden', !(p && p.human && G.phase==='postroll'));
+  rollBtn.classList.toggle('hidden', !iControl);
+  endBtn.classList.toggle('hidden', !(iControl && G.phase==='postroll'));
 }
 
-function renderAll(){
+function renderAll(skipSave){
   refreshTileVisuals();
   renderTokens();
   renderSidePanel();
@@ -717,7 +1006,7 @@ function renderAll(){
   renderDice();
   renderTurnBanner();
   renderButtons();
-  saveGame();
+  if(!skipSave) saveGame();
   checkGameEndByLaps();
 }
 
@@ -850,6 +1139,7 @@ function settleDice(a,b){
 async function doRoll(){
   const p = currentPlayer();
   if(!p || p.bankrupt) return;
+  if(!canIControl(p)) return;
   if(p.inIsland){ return; } // handled via island modal
   G.phase = 'moving';
   renderButtons();
@@ -933,17 +1223,18 @@ async function endOfAction(player, isDouble){
 async function autoAdvanceTurn(player){
   await sleep(1600);
   for(let i=0;i<16;i++){
-    if(G.phase!=='postroll' || currentPlayer()!==player) return;
+    const cp = currentPlayer();
+    if(G.phase!=='postroll' || !cp || cp.id!==player.id) return;
     const modalOpen = document.getElementById('modalRoot').children.length>0;
     if(!modalOpen){ await nextTurn(); return; }
     await sleep(500);
   }
 }
 
-document.getElementById('rollBtn').addEventListener('click', ()=>{ if(G && G.phase==='idle') doRoll(); });
+document.getElementById('rollBtn').addEventListener('click', ()=>{ if(G && G.phase==='idle' && canIControl(currentPlayer())) doRoll(); });
 document.getElementById('endTurnBtn').addEventListener('click', async ()=>{
   const p = currentPlayer();
-  if(p && p.human && G.phase==='postroll'){ await nextTurn(); }
+  if(p && canIControl(p) && G.phase==='postroll'){ await nextTurn(); }
 });
 
 async function nextTurn(){
@@ -961,18 +1252,11 @@ async function nextTurn(){
   p.consecDoubles = 0;
   G.phase = 'idle';
   renderAll();
-  if(p.inIsland){
-    if(p.human){ showIslandModal(p); }
-    else{ await sleep(400); await aiHandleIsland(p); }
-    return;
-  }
-  if(!p.human){ await sleep(500); await aiTakeTurn(p); }
+  maybeDriveTurn();
 }
 
 function maybeAutoplay(){
-  const p = currentPlayer();
-  if(p && !p.human){ setTimeout(()=>aiTakeTurn(p), 700); }
-  if(p && p.inIsland && p.human){ showIslandModal(p); }
+  maybeDriveTurn();
 }
 
 /* =========================================================
@@ -1450,6 +1734,12 @@ async function aiTakeTurn(player){
    INIT
 ========================================================= */
 window.addEventListener('beforeunload', ()=>{ if(G) saveGame(); });
+
+/* reconnect to an active online room on page reload */
+const existingRoom = localStorage.getItem(ROOM_KEY);
+if(existingRoom){
+  joinRoom(existingRoom, null, true);
+}
 </script>
 </body>
 </html>
