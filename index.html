@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>부루마블 - 가족 세계여행 보드게임</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --felt:#13342a;
+  --felt-dark:#0c231c;
+  --board:#f6efdd;
+  --board-line:#d8c9a0;
+  --ink:#241c10;
+  --gold:#d4a62a;
+  --gold-light:#f0cf6a;
+  --cream:#fffaf0;
+  --danger:#c0392b;
+  --accent:#1B3A5C;
+  --p0:#e74c3c; --p1:#2980b9; --p2:#27ae60; --p3:#f1c40f;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:"PretendardVariable",-apple-system,"Noto Sans KR",sans-serif;
+  background:radial-gradient(ellipse at top, var(--felt) 0%, var(--felt-dark) 70%);
+  color:var(--cream);
+  min-height:100vh;
+  word-break:keep-all;
+  font-variant-numeric:tabular-nums;
+}
+button{font-family:inherit;}
+.hidden{display:none !important;}
+img,svg{max-width:100%;}
+
+/* ---------- layout shells ---------- */
+#app{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:14px;gap:14px;}
+
+/* ---------- setup screen ---------- */
+.setup-wrap{width:100%;max-width:760px;background:rgba(255,255,255,0.03);border:1px solid rgba(212,166,42,0.35);border-radius:18px;padding:24px;}
+.setup-title{text-align:center;margin-bottom:4px;}
+.setup-title h1{font-size:2.1rem;margin:0;color:var(--gold-light);letter-spacing:1px;}
+.setup-title p{margin:6px 0 20px;text-align:center;color:#cfd8c9;font-size:0.92rem;}
+.preset-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:18px;}
+.preset-btn{flex:1;min-width:110px;background:rgba(212,166,42,0.12);border:1px solid var(--gold);color:var(--gold-light);padding:12px 8px;border-radius:12px;cursor:pointer;font-weight:600;font-size:0.95rem;transition:.15s;}
+.preset-btn:hover{background:rgba(212,166,42,0.28);}
+.preset-sub{display:block;font-size:0.72rem;font-weight:400;color:#cfd8c9;margin-top:2px;}
+
+.player-slot{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,0.22);border-radius:12px;padding:10px 12px;margin-bottom:8px;border-left:5px solid var(--p0);}
+.player-slot.off{opacity:0.45;}
+.slot-token{font-size:1.6rem;width:38px;text-align:center;flex:none;}
+.slot-toggle{flex:none;}
+.slot-toggle button{background:none;border:1px solid rgba(255,255,255,0.3);color:var(--cream);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:0.82rem;}
+.slot-toggle button.on{background:var(--gold);color:#1a1300;border-color:var(--gold);}
+.slot-name{flex:1;min-width:70px;}
+.slot-name input{width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:var(--cream);padding:7px 8px;font-size:0.9rem;}
+.slot-type{display:flex;gap:4px;flex:none;}
+.slot-type button{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.25);color:#dfe7da;border-radius:8px;padding:6px 9px;font-size:0.8rem;cursor:pointer;}
+.slot-type button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+.setup-options{display:flex;gap:14px;flex-wrap:wrap;margin:18px 0;}
+.opt-group{flex:1;min-width:150px;}
+.opt-group label{display:block;font-size:0.8rem;color:#cfd8c9;margin-bottom:4px;}
+.opt-group select{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:var(--cream);}
+
+.setup-actions{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
+.btn-main{flex:2;min-width:160px;background:linear-gradient(135deg,var(--gold-light),var(--gold));color:#1a1300;border:none;border-radius:12px;padding:14px;font-size:1.05rem;font-weight:700;cursor:pointer;}
+.btn-main:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-ghost{flex:1;min-width:120px;background:transparent;border:1px solid rgba(255,255,255,0.3);color:var(--cream);border-radius:12px;padding:14px;font-size:0.95rem;cursor:pointer;}
+.setup-warn{text-align:center;color:#ffb199;font-size:0.84rem;min-height:1.2em;margin-top:6px;}
+
+/* ---------- game screen ---------- */
+#gameScreen{width:100%;max-width:1180px;display:flex;flex-direction:column;gap:12px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:rgba(0,0,0,0.25);border-radius:14px;padding:10px 16px;}
+.topbar h2{margin:0;font-size:1.1rem;color:var(--gold-light);}
+.topbar .tbtns{display:flex;gap:6px;}
+.topbar button{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.25);color:var(--cream);padding:7px 12px;border-radius:8px;font-size:0.82rem;cursor:pointer;}
+.topbar button:hover{background:rgba(255,255,255,0.18);}
+
+.main-layout{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;}
+.board-wrap{flex:none;width:100%;max-width:720px;aspect-ratio:1/1;}
+.board{
+  display:grid;grid-template-columns:repeat(11,1fr);grid-template-rows:repeat(11,1fr);
+  width:100%;height:100%;background:var(--board);border-radius:10px;
+  border:4px solid var(--gold);box-shadow:0 10px 40px rgba(0,0,0,0.5);position:relative;
+}
+.tile{position:relative;border:1px solid var(--board-line);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;overflow:hidden;background:var(--board);padding:2px;cursor:default;}
+.tile.corner{display:flex;align-items:center;justify-content:center;background:#efe4bf;}
+.tile .band{position:absolute;top:0;left:0;right:0;height:24%;}
+.tile .ic{font-size:0.95rem;line-height:1;margin-bottom:1px;}
+.tile .nm{font-size:0.5rem;font-weight:700;color:var(--ink);text-align:center;line-height:1.05;max-width:95%;}
+.tile .pr{font-size:0.42rem;color:#555;margin-top:1px;}
+.tile.corner .nm{font-size:0.6rem;}
+.tile.owned{box-shadow:inset 0 0 0 2px var(--owner-color,transparent);}
+.tile .lvbadge{position:absolute;bottom:1px;right:1px;font-size:0.5rem;background:rgba(0,0,0,0.65);color:#fff;border-radius:3px;padding:0 2px;}
+.tile .mortbadge{position:absolute;top:26%;left:1px;font-size:0.48rem;background:#8e2f2f;color:#fff;border-radius:3px;padding:0 2px;}
+.tokens-layer{position:absolute;inset:0;pointer-events:none;}
+.token{position:absolute;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.5);transition:left .25s,top .25s;}
+
+.center-area{position:absolute;top:9.1%;left:9.1%;width:81.8%;height:81.8%;grid-column:2/11;grid-row:2/11;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:repeating-linear-gradient(135deg,#efe4bf,#efe4bf 14px,#e8dcac 14px,#e8dcac 28px);border:2px dashed var(--gold);border-radius:8px;padding:10px;}
+.logo-mark{font-size:1.4rem;font-weight:800;color:#5a3d12;letter-spacing:2px;}
+.dice-row{display:flex;gap:8px;}
+.die{width:38px;height:38px;background:#fff;border-radius:7px;border:2px solid #333;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:4px;box-shadow:0 2px 6px rgba(0,0,0,0.3);}
+.die i{border-radius:50%;background:transparent;}
+.die i.on{background:#222;}
+.roll-btn{background:linear-gradient(135deg,var(--gold-light),var(--gold));border:none;border-radius:10px;padding:10px 22px;font-weight:700;color:#1a1300;cursor:pointer;font-size:0.95rem;}
+.roll-btn:disabled{opacity:0.35;cursor:not-allowed;}
+.turn-banner{font-size:0.82rem;background:rgba(27,58,92,0.85);color:#fff;padding:6px 12px;border-radius:20px;text-align:center;max-width:90%;}
+.end-turn-btn{background:rgba(0,0,0,0.3);border:1px solid var(--gold);color:var(--gold-light);padding:8px 16px;border-radius:9px;cursor:pointer;font-size:0.85rem;}
+.log-box{width:92%;max-height:70px;overflow-y:auto;font-size:0.66rem;background:rgba(255,255,255,0.5);border-radius:6px;padding:4px 7px;color:#3a2f16;line-height:1.5;}
+.log-box div{border-bottom:1px solid rgba(0,0,0,0.06);padding:1px 0;}
+
+/* side panel */
+.side-panel{flex:1;min-width:280px;display:flex;flex-direction:column;gap:10px;}
+.pcard{background:rgba(255,255,255,0.05);border-radius:12px;padding:10px 12px;border-left:5px solid #888;transition:.2s;}
+.pcard.current{background:rgba(212,166,42,0.18);box-shadow:0 0 0 2px var(--gold);}
+.pcard.bankrupt{opacity:0.4;}
+.pcard .pc-head{display:flex;align-items:center;gap:8px;}
+.pcard .pc-token{font-size:1.3rem;}
+.pcard .pc-name{font-weight:700;flex:1;font-size:0.92rem;}
+.pcard .pc-badge{font-size:0.65rem;background:rgba(0,0,0,0.3);border-radius:8px;padding:2px 7px;}
+.pcard .pc-cash{font-size:1.15rem;font-weight:800;color:var(--gold-light);margin:4px 0 2px;}
+.pcard .pc-meta{font-size:0.72rem;color:#c9d2c3;}
+.pc-props{margin-top:6px;display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto;}
+.pc-prop-row{display:flex;align-items:center;gap:6px;font-size:0.72rem;background:rgba(0,0,0,0.18);border-radius:6px;padding:4px 6px;}
+.pc-prop-row .pr-name{flex:1;}
+.pc-prop-row button{font-size:0.62rem;padding:3px 6px;border-radius:5px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:#fff;cursor:pointer;}
+.pc-prop-row button:disabled{opacity:0.3;cursor:not-allowed;}
+.pc-prop-row .swatch{width:8px;height:8px;border-radius:2px;flex:none;}
+.toggle-props{font-size:0.7rem;color:var(--gold-light);cursor:pointer;margin-top:4px;text-align:center;}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;}
+.modal{background:var(--cream);color:var(--ink);border-radius:14px;max-width:460px;width:100%;max-height:86vh;overflow-y:auto;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+.modal h3{margin:0 0 10px;color:#5a3d12;font-size:1.1rem;}
+.modal p{font-size:0.88rem;line-height:1.6;margin:6px 0;}
+.modal .mrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.modal button{flex:1;min-width:100px;padding:10px;border-radius:9px;border:none;cursor:pointer;font-weight:600;font-size:0.88rem;}
+.modal button.primary{background:var(--accent);color:#fff;}
+.modal button.good{background:#27ae60;color:#fff;}
+.modal button.bad{background:var(--danger);color:#fff;}
+.modal button.neutral{background:#e0d9c0;color:#3a2f16;}
+.card-face{background:linear-gradient(135deg,var(--gold-light),var(--gold));border-radius:10px;padding:16px;text-align:center;margin-bottom:12px;}
+.card-face .cf-ic{font-size:2rem;}
+.card-face .cf-txt{font-weight:700;color:#1a1300;margin-top:6px;}
+.dest-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0;max-height:280px;overflow-y:auto;}
+.dest-grid button{background:#fff;border:1px solid #d8c9a0;border-radius:8px;padding:8px 4px;font-size:0.72rem;color:#3a2f16;cursor:pointer;text-align:center;}
+.dest-grid button:hover{background:#f0e6c8;}
+.rules-body h4{color:#5a3d12;margin:14px 0 4px;}
+.rules-body ul{padding-left:18px;margin:4px 0;}
+.rules-body li{font-size:0.84rem;margin-bottom:3px;}
+
+.gameover-rank{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,0.05);border-radius:8px;padding:8px 10px;margin-bottom:6px;}
+.gameover-rank .rk{font-weight:800;font-size:1.1rem;width:26px;}
+
+@media (max-width:760px){
+  .tile .nm{font-size:0.42rem;}
+  .tile .pr{display:none;}
+  .die{width:30px;height:30px;}
+  .logo-mark{font-size:1rem;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ============ SETUP SCREEN ============ -->
+<div class="setup-wrap" id="setupScreen">
+  <div class="setup-title">
+    <h1>🌍 부루마블</h1>
+    <p>가족과 함께 떠나는 세계여행 보드게임 · 1인 ~ 4인용</p>
+  </div>
+
+  <div class="preset-row">
+    <button class="preset-btn" data-preset="1">1인용<span class="preset-sub">나 vs 컴퓨터 1명</span></button>
+    <button class="preset-btn" data-preset="2">2인용<span class="preset-sub">가족 2명</span></button>
+    <button class="preset-btn" data-preset="3">3인용<span class="preset-sub">가족 3명</span></button>
+    <button class="preset-btn" data-preset="4">4인용<span class="preset-sub">가족 4명</span></button>
+  </div>
+
+  <div id="playerSlots"></div>
+
+  <div class="setup-options">
+    <div class="opt-group">
+      <label>시작 자금</label>
+      <select id="optCash">
+        <option value="10000000">1,000만원 (빠른 게임)</option>
+        <option value="15000000" selected>1,500만원 (기본)</option>
+        <option value="20000000">2,000만원 (여유있게)</option>
+      </select>
+    </div>
+    <div class="opt-group">
+      <label>게임 길이</label>
+      <select id="optLaps">
+        <option value="0">무제한 (파산자 가릴 때까지)</option>
+        <option value="20">20바퀴 후 자산 비교</option>
+        <option value="30" selected>30바퀴 후 자산 비교</option>
+        <option value="40">40바퀴 후 자산 비교</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="setup-warn" id="setupWarn"></div>
+  <div class="setup-actions">
+    <button class="btn-main" id="startBtn">게임 시작</button>
+    <button class="btn-ghost" id="continueBtn">이어서 하기</button>
+    <button class="btn-ghost" id="rulesBtnSetup">게임 규칙 보기</button>
+  </div>
+</div>
+
+<!-- ============ GAME SCREEN ============ -->
+<div id="gameScreen" class="hidden">
+  <div class="topbar">
+    <h2>🌍 부루마블</h2>
+    <div class="tbtns">
+      <button id="rulesBtnGame">📖 규칙</button>
+      <button id="newGameBtn">🔄 새 게임</button>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <div class="board-wrap">
+      <div class="board" id="board">
+        <div class="center-area">
+          <div class="logo-mark">BURU MARBLE</div>
+          <div class="turn-banner" id="turnBanner">게임을 준비하고 있습니다…</div>
+          <div class="dice-row" id="diceRow">
+            <div class="die" id="die0"></div>
+            <div class="die" id="die1"></div>
+          </div>
+          <button class="roll-btn" id="rollBtn">🎲 주사위 굴리기</button>
+          <button class="end-turn-btn hidden" id="endTurnBtn">턴 종료 ▶</button>
+          <div class="log-box" id="logBox"></div>
+        </div>
+        <div class="tokens-layer" id="tokensLayer"></div>
+      </div>
+    </div>
+
+    <div class="side-panel" id="sidePanel"></div>
+  </div>
+</div>
+
+</div>
+
+<!-- generic modal root -->
+<div id="modalRoot"></div>
+
+<script>
+/* =========================================================
+   DATA
+========================================================= */
+const FMT = n => '₩' + Math.round(n).toLocaleString('ko-KR');
+
+const GROUPS = [
+  {id:1,name:'아시아',color:'#8B5E3C'},
+  {id:2,name:'동남아시아',color:'#2FB4D1'},
+  {id:3,name:'중동·인도',color:'#D6378C'},
+  {id:4,name:'아프리카',color:'#F2994A'},
+  {id:5,name:'유럽 서부',color:'#E84545'},
+  {id:6,name:'유럽 동부',color:'#D7B93A'},
+  {id:7,name:'북아메리카',color:'#27AE60'},
+  {id:8,name:'남미·오세아니아',color:'#2C3E8C'},
+];
+
+// tile definition, index 0-39
+// type: go | city | chance | tax | airport | utility | island | worldtour | socialfund
+const TILES = [
+/*0*/  {type:'go', name:'출발', icon:'🚩'},
+/*1*/  {type:'city', name:'서울', icon:'🏯', group:1, price:600000},
+/*2*/  {type:'chance', name:'황금열쇠', icon:'🔑'},
+/*3*/  {type:'city', name:'부산', icon:'🌉', group:1, price:600000},
+/*4*/  {type:'tax', name:'소득세', icon:'💰', taxType:'income'},
+/*5*/  {type:'airport', name:'인천공항', icon:'✈️', price:2000000},
+/*6*/  {type:'city', name:'오사카', icon:'⛩️', group:1, price:800000},
+/*7*/  {type:'city', name:'방콕', icon:'🛺', group:2, price:1000000},
+/*8*/  {type:'utility', name:'전력회사', icon:'🔌', price:1500000},
+/*9*/  {type:'city', name:'하노이', icon:'🏮', group:2, price:1000000},
+/*10*/ {type:'island', name:'무인도', icon:'🏝️'},
+/*11*/ {type:'city', name:'자카르타', icon:'🕌', group:2, price:1200000},
+/*12*/ {type:'chance', name:'황금열쇠', icon:'🔑'},
+/*13*/ {type:'city', name:'뭄바이', icon:'🕌', group:3, price:1400000},
+/*14*/ {type:'city', name:'두바이', icon:'🏙️', group:3, price:1400000},
+/*15*/ {type:'airport', name:'도쿄공항', icon:'✈️', price:2000000},
+/*16*/ {type:'city', name:'이스탄불', icon:'🕍', group:3, price:1600000},
+/*17*/ {type:'city', name:'카이로', icon:'🐫', group:4, price:1800000},
+/*18*/ {type:'chance', name:'황금열쇠', icon:'🔑'},
+/*19*/ {type:'city', name:'나이로비', icon:'🦁', group:4, price:1800000},
+/*20*/ {type:'worldtour', name:'세계여행', icon:'🛫'},
+/*21*/ {type:'city', name:'요하네스버그', icon:'💎', group:4, price:2000000},
+/*22*/ {type:'city', name:'마드리드', icon:'🐂', group:5, price:2200000},
+/*23*/ {type:'utility', name:'수도회사', icon:'💧', price:1500000},
+/*24*/ {type:'city', name:'로마', icon:'🏛️', group:5, price:2200000},
+/*25*/ {type:'airport', name:'런던공항', icon:'✈️', price:2000000},
+/*26*/ {type:'city', name:'베를린', icon:'🏰', group:5, price:2400000},
+/*27*/ {type:'city', name:'파리', icon:'🗼', group:6, price:2600000},
+/*28*/ {type:'chance', name:'황금열쇠', icon:'🔑'},
+/*29*/ {type:'city', name:'암스테르담', icon:'🌷', group:6, price:2600000},
+/*30*/ {type:'socialfund', name:'사회복지기금', icon:'🏦'},
+/*31*/ {type:'city', name:'모스크바', icon:'🪆', group:6, price:2800000},
+/*32*/ {type:'city', name:'시카고', icon:'🌆', group:7, price:3000000},
+/*33*/ {type:'chance', name:'황금열쇠', icon:'🔑'},
+/*34*/ {type:'city', name:'LA', icon:'🎬', group:7, price:3000000},
+/*35*/ {type:'airport', name:'뉴욕공항', icon:'✈️', price:2000000},
+/*36*/ {type:'city', name:'뉴욕', icon:'🗽', group:7, price:3200000},
+/*37*/ {type:'city', name:'리오데자네이루', icon:'🏖️', group:8, price:3500000},
+/*38*/ {type:'tax', name:'특별세', icon:'💸', taxType:'luxury'},
+/*39*/ {type:'city', name:'시드니', icon:'🏄', group:8, price:4000000},
+];
+
+const LEVEL_MULT = [0.08, 0.20, 0.40, 0.70]; // rent as fraction of price, by level 0-3
+const LANDMARK_MULT = 1.5;
+const BUILD_COST_MULT = [0.5, 0.5, 0.75, 1.0]; // cost to build villa/building/hotel/landmark, fraction of price
+const LEVEL_LABEL = ['빈 땅','별장','빌딩','호텔'];
+const AIRPORT_RENT = {1:250000,2:500000,3:1000000,4:2000000};
+const START_POS_BUFFER = 1500000;
+const PASS_GO_BONUS = 2000000;
+const INCOME_TAX_FLAT = 2000000;
+const LUXURY_TAX_FLAT = 1000000;
+const WORLDTOUR_FEE = 500000;
+const ISLAND_ESCAPE_FEE = 1000000;
+const ISLAND_MAX_STUCK_TURNS = 2;
+const MORTGAGE_RATE = 0.5;
+const UNMORTGAGE_INTEREST = 1.1;
+
+const TOKENS = ['🚗','✈️','🚢','🎩'];
+const PCOLORS = ['#e74c3c','#2980b9','#27ae60','#f1c40f'];
+
+const GOLDEN_KEYS = [
+  {text:'세계 여행 당첨! 세계여행 칸으로 이동합니다.', fx:(p)=>{ teleportTo(p,20); resolveLanding(p,true); }},
+  {text:'공항 이용료가 환급되어 50만원을 받습니다.', fx:(p)=>{ p.cash+=500000; }},
+  {text:'과속 범칙금 20만원을 지불합니다.', fx:(p)=>{ payOut(p,200000,null); }},
+  {text:'사회복지기금에서 생활 지원금을 받습니다.', fx:(p)=>{ const amt=Math.min(G.pot,1000000); G.pot-=amt; p.cash+=amt; }},
+  {text:'환경보호 기금 30만원을 사회복지기금에 납부합니다.', fx:(p)=>{ payOut(p,300000,null); }},
+  {text:'길을 잃어 무인도로 이동합니다.', fx:(p)=>{ sendToIsland(p); }},
+  {text:'무인도 탈출 카드를 획득했습니다! (보관됨)', fx:(p)=>{ p.escapeCards++; }},
+  {text:'출발점으로 이동합니다. (통과 보너스 없음)', fx:(p)=>{ p.position=0; }},
+  {text:'투자 성공! 모든 플레이어에게 10만원씩 받습니다.', fx:(p)=>{ activePlayers().forEach(o=>{ if(o!==p){ const amt=Math.min(o.cash,100000); o.cash-=amt; p.cash+=amt; } }); }},
+  {text:'친목 회비 명목으로 모든 플레이어에게 10만원씩 지불합니다.', fx:(p)=>{ activePlayers().forEach(o=>{ if(o!==p){ const amt=Math.min(p.cash,100000); p.cash-=amt; o.cash+=amt; } }); }},
+  {text:'건물 유지비 납부: 보유 건물 1개당 10만원을 지불합니다.', fx:(p)=>{ const cnt=countBuildings(p); payOut(p,cnt*100000,null); }},
+  {text:'행운의 추가 이동! 주사위를 다시 굴려 전진합니다.', fx:(p)=>{ const d=rollTwo(); moveForward(p,d.total,true); resolveLanding(p,d.isDouble); }},
+  {text:'뒤로 3칸 이동합니다.', fx:(p)=>{ moveBackward(p,3); resolveLanding(p,false); }},
+  {text:'앞으로 5칸 이동합니다.', fx:(p)=>{ moveForward(p,5,true); resolveLanding(p,false); }},
+  {text:'복권에 당첨되어 200만원을 받습니다!', fx:(p)=>{ p.cash+=2000000; }},
+  {text:'세무 조사를 받아 50만원을 지불합니다.', fx:(p)=>{ payOut(p,500000,null); }},
+];
+
+/* =========================================================
+   STATE
+========================================================= */
+let G = null; // game state
+const SAVE_KEY = 'burumarble_save_v1';
+
+function freshDeck(){
+  const d = GOLDEN_KEYS.map((_,i)=>i);
+  for(let i=d.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; }
+  return d;
+}
+
+function newTileState(){
+  return TILES.map(t=>{
+    if(t.type==='city'||t.type==='airport'||t.type==='utility'){
+      return {owner:null, level:0, mortgaged:false, landmark:false};
+    }
+    return null;
+  });
+}
+
+/* =========================================================
+   PLAYER / BOARD HELPERS
+========================================================= */
+function activePlayers(){ return G.players.filter(p=>!p.bankrupt); }
+function currentPlayer(){ return G.players[G.turnIdx]; }
+function groupOf(gid){ return GROUPS.find(g=>g.id===gid); }
+function groupTiles(gid){ return TILES.map((t,i)=>({t,i})).filter(x=>x.t.group===gid).map(x=>x.i); }
+function ownsFullGroup(player, gid){
+  return groupTiles(gid).every(i=>G.tileState[i].owner===player.id);
+}
+function countBuildings(player){
+  let c=0;
+  G.tileState.forEach((ts,i)=>{ if(ts && ts.owner===player.id){ c+=ts.level; if(ts.landmark) c+=1; } });
+  return c;
+}
+function propertyValue(ts, tile){
+  if(!ts || !ts.owner) return 0;
+  if(ts.mortgaged) return tile.price*MORTGAGE_RATE;
+  let v = tile.price*(1+ts.level*0.5);
+  if(ts.landmark) v += tile.price*1.0;
+  return v;
+}
+function netWorth(player){
+  let v = player.cash;
+  G.tileState.forEach((ts,i)=>{ if(ts && ts.owner===player.id){ v += propertyValue(ts, TILES[i]); } });
+  return v;
+}
+function ownerOf(idx){
+  const ts = G.tileState[idx];
+  if(!ts || ts.owner==null) return null;
+  return G.players.find(p=>p.id===ts.owner);
+}
+function playerOwnedAirports(player){
+  return TILES.map((t,i)=>({t,i})).filter(x=>x.t.type==='airport' && G.tileState[x.i].owner===player.id && !G.tileState[x.i].mortgaged).length;
+}
+function playerOwnedUtilities(player){
+  return TILES.map((t,i)=>({t,i})).filter(x=>x.t.type==='utility' && G.tileState[x.i].owner===player.id && !G.tileState[x.i].mortgaged).length;
+}
+
+function log(msg){
+  G.logs.unshift(msg);
+  if(G.logs.length>60) G.logs.pop();
+  renderLog();
+}
+
+/* =========================================================
+   SETUP SCREEN LOGIC
+========================================================= */
+const slotDefaults = [
+  {name:'플레이어1', human:true, on:true},
+  {name:'플레이어2', human:true, on:true},
+  {name:'플레이어3', human:false, on:false},
+  {name:'플레이어4', human:false, on:false},
+];
+let slots = JSON.parse(JSON.stringify(slotDefaults));
+
+function renderSlots(){
+  const root = document.getElementById('playerSlots');
+  root.innerHTML = '';
+  slots.forEach((s,i)=>{
+    const div = document.createElement('div');
+    div.className = 'player-slot' + (s.on?'':' off');
+    div.style.borderLeftColor = PCOLORS[i];
+    div.innerHTML = `
+      <div class="slot-token">${TOKENS[i]}</div>
+      <div class="slot-toggle"><button data-i="${i}" data-act="toggle" class="${s.on?'on':''}">${s.on?'참가중':'미참가'}</button></div>
+      <div class="slot-name"><input data-i="${i}" data-act="name" value="${s.name}" maxlength="8" ${s.human?'':'disabled'}></div>
+      <div class="slot-type">
+        <button data-i="${i}" data-act="human" class="${s.human?'active':''}">사람</button>
+        <button data-i="${i}" data-act="ai" class="${!s.human?'active':''}">컴퓨터</button>
+      </div>`;
+    root.appendChild(div);
+  });
+}
+document.getElementById('playerSlots').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  const i = +b.dataset.i, act = b.dataset.act;
+  if(act==='toggle'){ slots[i].on = !slots[i].on; }
+  if(act==='human'){ slots[i].human = true; if(!slots[i].name || /^컴퓨터/.test(slots[i].name)) slots[i].name = slotDefaults[i].name; }
+  if(act==='ai'){ slots[i].human = false; slots[i].name = '컴퓨터'+(i+1); }
+  renderSlots();
+});
+document.getElementById('playerSlots').addEventListener('input', e=>{
+  const inp = e.target.closest('input'); if(!inp) return;
+  slots[+inp.dataset.i].name = inp.value;
+});
+document.querySelectorAll('.preset-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const n = +btn.dataset.preset;
+    slots = JSON.parse(JSON.stringify(slotDefaults));
+    if(n===1){ slots[0]={name:'플레이어1',human:true,on:true}; slots[1]={name:'컴퓨터1',human:false,on:true}; slots[2].on=false; slots[3].on=false; }
+    else{
+      for(let i=0;i<4;i++){ slots[i].on = i<n; slots[i].human = i<n; slots[i].name = i<n ? '플레이어'+(i+1) : slots[i].name; }
+    }
+    renderSlots();
+  });
+});
+renderSlots();
+
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  const active = slots.map((s,i)=>({...s, idx:i})).filter(s=>s.on);
+  if(active.length<2){ document.getElementById('setupWarn').textContent = '최소 2명(본인 + 컴퓨터 포함)이 있어야 게임을 시작할 수 있어요.'; return; }
+  startGame(active);
+});
+document.getElementById('continueBtn').addEventListener('click', ()=>{
+  const saved = loadSave();
+  if(!saved){ document.getElementById('setupWarn').textContent = '저장된 게임이 없습니다.'; return; }
+  G = saved;
+  showGameScreen();
+  renderBoardOnce();
+  renderAll();
+  log('저장된 게임을 이어서 시작합니다.');
+});
+if(!loadSave()) document.getElementById('continueBtn').style.display='none';
+
+document.getElementById('rulesBtnSetup').addEventListener('click', showRulesModal);
+document.getElementById('rulesBtnGame').addEventListener('click', showRulesModal);
+document.getElementById('newGameBtn').addEventListener('click', ()=>{
+  openModal(`<h3>새 게임을 시작할까요?</h3><p>현재 진행중인 게임은 저장되지 않고 사라집니다.</p>
+    <div class="mrow"><button class="neutral" id="mCancel">취소</button><button class="bad" id="mOk">새 게임 시작</button></div>`);
+  document.getElementById('mCancel').onclick = closeModal;
+  document.getElementById('mOk').onclick = ()=>{ localStorage.removeItem(SAVE_KEY); closeModal(); location.reload(); };
+});
+
+function startGame(active){
+  const cash = +document.getElementById('optCash').value;
+  const laps = +document.getElementById('optLaps').value;
+  G = {
+    players: active.map((s,i)=>({
+      id:i, name:s.name||('플레이어'+(i+1)), human:s.human, token:TOKENS[s.idx], color:PCOLORS[s.idx],
+      cash, position:0, bankrupt:false, inIsland:false, islandTurns:0, escapeCards:0, consecDoubles:0,
+    })),
+    tileState: newTileState(),
+    deck: freshDeck(),
+    discard: [],
+    pot: 0,
+    turnIdx: 0,
+    lap: 0,
+    maxLaps: laps,
+    logs: [],
+    phase: 'idle', // idle | rolling | moving | resolving
+    dice: [1,1],
+  };
+  showGameScreen();
+  renderBoardOnce();
+  log(`게임 시작! 참가자: ${G.players.map(p=>p.name+(p.human?'':'(AI)')).join(', ')}`);
+  renderAll();
+  saveGame();
+  maybeAutoplay();
+}
+
+function showGameScreen(){
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('gameScreen').classList.remove('hidden');
+}
+
+function saveGame(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(G)); }catch(e){}
+}
+function loadSave(){
+  try{ const raw = localStorage.getItem(SAVE_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
+}
+
+/* =========================================================
+   BOARD RENDER (static tiles, built once per game)
+========================================================= */
+function tileGridPos(i){
+  if(i===0) return {row:11,col:11};
+  if(i>=1&&i<=9) return {row:11,col:11-i};
+  if(i===10) return {row:11,col:1};
+  if(i>=11&&i<=19) return {row:11-(i-10),col:1};
+  if(i===20) return {row:1,col:1};
+  if(i>=21&&i<=29) return {row:1,col:1+(i-20)};
+  if(i===30) return {row:1,col:11};
+  return {row:1+(i-30),col:11};
+}
+
+function renderBoardOnce(){
+  const board = document.getElementById('board');
+  // remove old tiles (keep center-area and tokens-layer)
+  board.querySelectorAll('.tile').forEach(e=>e.remove());
+  TILES.forEach((t,i)=>{
+    const pos = tileGridPos(i);
+    const div = document.createElement('div');
+    div.className = 'tile' + (['go','island','worldtour','socialfund'].includes(t.type)?' corner':'');
+    div.style.gridRow = pos.row; div.style.gridColumn = pos.col;
+    div.dataset.idx = i;
+    let bandColor = null;
+    if(t.type==='city') bandColor = groupOf(t.group).color;
+    if(t.type==='airport') bandColor = '#999';
+    if(t.type==='utility') bandColor = '#bbb';
+    if(t.type==='chance') bandColor = '#d4a62a';
+    if(t.type==='tax') bandColor = '#a33';
+    let html = '';
+    if(bandColor) html += `<div class="band" style="background:${bandColor}"></div>`;
+    html += `<div class="ic">${t.icon}</div><div class="nm">${t.name}</div>`;
+    if(t.price) html += `<div class="pr">${(t.price/10000).toLocaleString()}만</div>`;
+    div.innerHTML = html;
+    if(t.type==='city'||t.type==='airport'||t.type==='utility'){
+      div.addEventListener('click', ()=>showTileInfo(i));
+    }
+    board.appendChild(div);
+  });
+}
+
+function refreshTileVisuals(){
+  document.querySelectorAll('.tile').forEach(div=>{
+    const i = +div.dataset.idx;
+    const ts = G.tileState[i];
+    div.querySelectorAll('.lvbadge,.mortbadge').forEach(e=>e.remove());
+    div.classList.remove('owned');
+    div.style.removeProperty('--owner-color');
+    if(ts && ts.owner!=null){
+      const owner = G.players.find(p=>p.id===ts.owner);
+      div.classList.add('owned');
+      div.style.setProperty('--owner-color', owner ? owner.color : '#fff');
+      if(ts.mortgaged){
+        const m = document.createElement('div'); m.className='mortbadge'; m.textContent='저당'; div.appendChild(m);
+      } else if(ts.landmark){
+        const b = document.createElement('div'); b.className='lvbadge'; b.textContent='★랜드마크'; div.appendChild(b);
+      } else if(ts.level>0){
+        const b = document.createElement('div'); b.className='lvbadge'; b.textContent=LEVEL_LABEL[ts.level]; div.appendChild(b);
+      }
+    }
+  });
+}
+
+function renderTokens(){
+  const layer = document.getElementById('tokensLayer');
+  layer.innerHTML = '';
+  const offsets = [[18,18],[62,18],[18,62],[62,62]];
+  G.players.forEach((p,pi)=>{
+    if(p.bankrupt) return;
+    const pos = tileGridPos(p.position);
+    const tok = document.createElement('div');
+    tok.className = 'token';
+    tok.style.background = p.color;
+    tok.textContent = p.token;
+    const colW = 100/11, rowH = 100/11;
+    const left = (pos.col-1)*colW + offsets[pi][0]*colW/100*0.9;
+    const top = (pos.row-1)*rowH + offsets[pi][1]*rowH/100*0.9;
+    tok.style.left = left + '%';
+    tok.style.top = top + '%';
+    layer.appendChild(tok);
+  });
+}
+
+/* =========================================================
+   SIDE PANEL
+========================================================= */
+let expandedPanels = {};
+function renderSidePanel(){
+  const root = document.getElementById('sidePanel');
+  root.innerHTML = '';
+  G.players.forEach(p=>{
+    const isCurrent = (G.players[G.turnIdx]===p);
+    const card = document.createElement('div');
+    card.className = 'pcard' + (isCurrent?' current':'') + (p.bankrupt?' bankrupt':'');
+    card.style.borderLeftColor = p.color;
+    const badges = [];
+    if(p.bankrupt) badges.push('💀 파산');
+    else if(p.inIsland) badges.push('🏝️ 무인도');
+    if(!p.human) badges.push('AI');
+    const myProps = TILES.map((t,i)=>({t,i})).filter(x=>G.tileState[x.i] && G.tileState[x.i].owner===p.id);
+    card.innerHTML = `
+      <div class="pc-head">
+        <div class="pc-token">${p.token}</div>
+        <div class="pc-name">${p.name}</div>
+        ${badges.map(b=>`<span class="pc-badge">${b}</span>`).join('')}
+      </div>
+      <div class="pc-cash">${FMT(p.cash)}</div>
+      <div class="pc-meta">보유 자산(순자산 추정): ${FMT(netWorth(p))} · 보유지 ${myProps.length}곳 · 탈출카드 ${p.escapeCards}</div>
+      <div class="toggle-props" data-pid="${p.id}">${expandedPanels[p.id] ? '보유 자산 숨기기 ▲' : '보유 자산 보기 ▼'}</div>
+      <div class="pc-props ${expandedPanels[p.id]?'':'hidden'}" id="props-${p.id}"></div>
+    `;
+    root.appendChild(card);
+    if(expandedPanels[p.id]){
+      const propRoot = card.querySelector('#props-'+p.id);
+      if(myProps.length===0){ propRoot.innerHTML = '<div class="pc-prop-row">보유한 자산이 없습니다.</div>'; }
+      myProps.forEach(({t,i})=>{
+        const ts = G.tileState[i];
+        const canBuild = isCurrent && p.human && G.phase==='idle' && t.type==='city' && !ts.mortgaged;
+        const canMortgage = isCurrent && p.human && G.phase==='idle' && !ts.mortgaged && ts.level===0 && !ts.landmark;
+        const canUnmortgage = isCurrent && p.human && G.phase==='idle' && ts.mortgaged;
+        const row = document.createElement('div');
+        row.className = 'pc-prop-row';
+        const groupColor = t.group ? groupOf(t.group).color : '#888';
+        row.innerHTML = `<div class="swatch" style="background:${groupColor}"></div>
+          <div class="pr-name">${t.icon} ${t.name} ${ts.mortgaged?'(저당)':ts.landmark?'★':ts.level>0?'('+LEVEL_LABEL[ts.level]+')':''}</div>
+          ${canBuild?`<button data-build="${i}">건설</button>`:''}
+          ${canMortgage?`<button data-mortgage="${i}">저당</button>`:''}
+          ${canUnmortgage?`<button data-unmortgage="${i}">저당 해제</button>`:''}
+        `;
+        propRoot.appendChild(row);
+      });
+    }
+  });
+  root.querySelectorAll('[data-build]').forEach(b=>b.onclick=()=>openBuildModal(+b.dataset.build));
+  root.querySelectorAll('[data-mortgage]').forEach(b=>b.onclick=()=>doMortgage(+b.dataset.mortgage));
+  root.querySelectorAll('[data-unmortgage]').forEach(b=>b.onclick=()=>doUnmortgage(+b.dataset.unmortgage));
+  root.querySelectorAll('.toggle-props').forEach(el=>el.onclick=()=>{ const pid=+el.dataset.pid; expandedPanels[pid]=!expandedPanels[pid]; renderSidePanel(); });
+}
+
+function renderLog(){
+  document.getElementById('logBox').innerHTML = G.logs.map(l=>`<div>${l}</div>`).join('');
+}
+
+function renderDice(){
+  const DOTS = {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+  [0,1].forEach(d=>{
+    const el = document.getElementById('die'+d);
+    el.innerHTML = '';
+    for(let c=0;c<9;c++){
+      const i = document.createElement('i');
+      if(DOTS[G.dice[d]].includes(c)) i.className='on';
+      el.appendChild(i);
+    }
+  });
+}
+
+function renderTurnBanner(){
+  const banner = document.getElementById('turnBanner');
+  const p = currentPlayer();
+  if(!p){ banner.textContent=''; return; }
+  const lapTxt = G.maxLaps>0 ? ` (바퀴 ${G.lap}/${G.maxLaps})` : '';
+  banner.textContent = `${p.token} ${p.name}님의 턴입니다${lapTxt}`;
+}
+
+function renderButtons(){
+  const p = currentPlayer();
+  const rollBtn = document.getElementById('rollBtn');
+  const endBtn = document.getElementById('endTurnBtn');
+  const canRollNow = p && p.human && !p.bankrupt && G.phase==='idle' && !p.inIsland;
+  rollBtn.disabled = !canRollNow;
+  rollBtn.classList.toggle('hidden', !(p && p.human));
+  endBtn.classList.toggle('hidden', !(p && p.human && G.phase==='postroll'));
+}
+
+function renderAll(){
+  refreshTileVisuals();
+  renderTokens();
+  renderSidePanel();
+  renderLog();
+  renderDice();
+  renderTurnBanner();
+  renderButtons();
+  saveGame();
+  checkGameEndByLaps();
+}
+
+/* =========================================================
+   TILE INFO (click to inspect any property)
+========================================================= */
+function showTileInfo(i){
+  const t = TILES[i]; const ts = G.tileState[i];
+  const owner = ownerOf(i);
+  let body = `<h3>${t.icon} ${t.name}</h3>`;
+  body += `<p>가격: ${FMT(t.price)}</p>`;
+  if(t.type==='city'){
+    const gr = groupOf(t.group);
+    body += `<p>대륙: ${gr.name}</p>`;
+    body += `<p>통행료 - 빈 땅: ${FMT(t.price*LEVEL_MULT[0])} / 별장: ${FMT(t.price*LEVEL_MULT[1])} / 빌딩: ${FMT(t.price*LEVEL_MULT[2])} / 호텔: ${FMT(t.price*LEVEL_MULT[3])} / 랜드마크: ${FMT(t.price*LANDMARK_MULT)}</p>`;
+  } else if(t.type==='airport'){
+    body += `<p>통행료 - 1개: ${FMT(AIRPORT_RENT[1])} / 2개: ${FMT(AIRPORT_RENT[2])} / 3개: ${FMT(AIRPORT_RENT[3])} / 4개: ${FMT(AIRPORT_RENT[4])}</p>`;
+  } else if(t.type==='utility'){
+    body += `<p>통행료 - 1개 보유 시 주사위×20만원, 2개 모두 보유 시 주사위×50만원</p>`;
+  }
+  body += owner ? `<p>소유자: ${owner.token} ${owner.name} ${ts.mortgaged?'(저당중)':ts.landmark?'(★랜드마크)':ts.level>0?'('+LEVEL_LABEL[ts.level]+')':''}</p>` : `<p>소유자 없음 (구매 가능)</p>`;
+  openModal(body + `<div class="mrow"><button class="neutral" id="mClose">닫기</button></div>`);
+  document.getElementById('mClose').onclick = closeModal;
+}
+
+/* =========================================================
+   MODAL HELPERS
+========================================================= */
+function openModal(html){
+  document.getElementById('modalRoot').innerHTML = `<div class="modal-bg" id="modalBg"><div class="modal">${html}</div></div>`;
+}
+function closeModal(){
+  document.getElementById('modalRoot').innerHTML = '';
+}
+
+function showRulesModal(){
+  openModal(`
+    <h3>📖 부루마블 게임 규칙</h3>
+    <div class="rules-body">
+    <h4>🎯 목표</h4>
+    <ul><li>세계 각 도시를 사들이고 별장·빌딩·호텔·랜드마크를 지어, 다른 플레이어가 통행료를 내게 만드세요.</li>
+    <li>끝까지 파산하지 않고 살아남거나, 정해진 바퀴 수가 끝났을 때 순자산(현금+자산)이 가장 많은 사람이 승리합니다.</li></ul>
+    <h4>🎲 턴 진행</h4>
+    <ul><li>자기 차례에 주사위 2개를 굴려 말을 이동합니다.</li>
+    <li>두 주사위 숫자가 같으면(더블) 턴이 끝난 뒤 한 번 더 굴릴 수 있습니다. 단, 한 턴에 더블이 3번 연속 나오면 무인도로 보내집니다.</li>
+    <li>출발(🚩) 칸을 지나거나 정확히 도착하면 ${FMT(PASS_GO_BONUS)}를 받습니다. (정확히 도착하면 추가 보너스가 한 번 더 더해져요.)</li></ul>
+    <h4>🏙️ 도시 구매와 통행료</h4>
+    <ul><li>빈 도시에 도착하면 구매할 수 있습니다. 구매하지 않으면 다음 사람에게 기회가 넘어가지 않고 그냥 빈 땅으로 남습니다.</li>
+    <li>다른 사람 소유의 칸에 도착하면 통행료를 지불해야 합니다. 건설 단계가 높을수록 통행료가 비싸집니다.</li>
+    <li>같은 대륙의 도시를 모두 소유하면 빈 땅이어도 통행료가 2배가 됩니다.</li></ul>
+    <h4>🏗️ 건설 - 별장 → 빌딩 → 호텔 → 랜드마크</h4>
+    <ul><li>같은 대륙 도시를 모두 소유해야 그 대륙 도시에 건물을 지을 수 있습니다.</li>
+    <li>별장 → 빌딩 → 호텔 순서로 올려야 하며, 올릴 때마다 비용이 들고 통행료가 올라갑니다.</li>
+    <li>대륙 내 모든 도시가 호텔이 되면, 그 중 한 곳을 골라 ★랜드마크를 지을 수 있습니다. 대륙당 1개만 가능하며 통행료가 가장 비쌉니다.</li></ul>
+    <h4>✈️ 공항 / 🔌💧 전력·수도회사</h4>
+    <ul><li>공항은 보유 개수가 많을수록(최대 4개) 통행료가 올라갑니다.</li>
+    <li>전력회사·수도회사는 통행료가 주사위 합계에 비례합니다. 2개를 모두 가지면 배율이 더 커집니다.</li></ul>
+    <h4>🔑 황금열쇠</h4>
+    <ul><li>황금열쇠 칸에 도착하면 카드를 한 장 뽑아 그 효과를 바로 적용합니다. 보너스, 벌금, 이동, 무인도행 등 다양한 효과가 있습니다.</li></ul>
+    <h4>🏝️ 무인도</h4>
+    <ul><li>무인도 칸에 도착하거나 카드/연속 더블로 보내지면 갇히게 됩니다.</li>
+    <li>탈출 방법: ① 탈출카드 사용 ② ${FMT(ISLAND_ESCAPE_FEE)}를 내고 즉시 탈출 ③ 주사위 더블이 나오면 탈출. 2턴을 쉬면 3턴째에는 강제로 풀려납니다.</li></ul>
+    <h4>🛫 세계여행</h4>
+    <ul><li>세계여행 칸에 도착하면 ${FMT(WORLDTOUR_FEE)}를 내고 원하는 칸으로 바로 이동할 수 있습니다. (이동한 칸의 효과도 그대로 적용됩니다.)</li></ul>
+    <h4>🏦 사회복지기금</h4>
+    <ul><li>세금, 벌금 등이 모여 쌓이는 곳입니다. 이 칸에 정확히 도착하면 쌓인 돈을 전부 가져갑니다.</li></ul>
+    <h4>💰 세금</h4>
+    <ul><li>소득세: ${FMT(INCOME_TAX_FLAT)} 고정 또는 순자산의 10% 중 적은 금액을 선택해 낼 수 있습니다.</li>
+    <li>특별세: ${FMT(LUXURY_TAX_FLAT)}를 고정으로 냅니다.</li></ul>
+    <h4>🏦 저당</h4>
+    <ul><li>현금이 부족하면 보유한 땅을 은행에 저당 잡혀 즉시 현금(가격의 50%)을 받을 수 있습니다. 저당 중인 땅은 통행료를 받을 수 없습니다.</li>
+    <li>저당을 해제하려면 저당금의 110%를 은행에 갚아야 합니다.</li></ul>
+    <h4>💀 파산</h4>
+    <ul><li>빚을 갚을 돈이 저당을 다 설정해도 부족하면 파산합니다. 다른 플레이어에게 진 빚이면 남은 재산이 그 플레이어에게 넘어가고, 세금 등 은행에 진 빚이면 재산이 모두 은행(빈 땅)으로 돌아갑니다.</li>
+    <li>한 명만 남으면 그 사람이 즉시 승리합니다.</li></ul>
+    </div>
+    <div class="mrow"><button class="primary" id="mClose">확인</button></div>
+  `);
+  document.getElementById('mClose').onclick = closeModal;
+}
+
+/* =========================================================
+   DICE / MOVEMENT
+========================================================= */
+function rollTwo(){
+  const a = 1+Math.floor(Math.random()*6);
+  const b = 1+Math.floor(Math.random()*6);
+  return {a,b,total:a+b,isDouble:a===b};
+}
+
+function moveForward(player, steps, grantBonus){
+  let newPos = player.position + steps;
+  if(newPos>=40){
+    newPos -= 40;
+    if(grantBonus){ player.cash += PASS_GO_BONUS; log(`${player.name}님이 출발 지점을 지나 ${FMT(PASS_GO_BONUS)}를 받았습니다.`); }
+  }
+  player.position = newPos;
+  if(newPos===0 && grantBonus){ player.cash += PASS_GO_BONUS; log(`${player.name}님이 출발 지점에 정확히 도착해 보너스 ${FMT(PASS_GO_BONUS)}를 추가로 받았습니다!`); }
+}
+function moveBackward(player, steps){
+  player.position = (player.position - steps + 40) % 40;
+}
+function teleportTo(player, idx){
+  player.position = idx;
+}
+
+async function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+/* =========================================================
+   TURN ENGINE
+========================================================= */
+async function doRoll(){
+  const p = currentPlayer();
+  if(!p || p.bankrupt) return;
+  if(p.inIsland){ return; } // handled via island modal
+  G.phase = 'moving';
+  renderButtons();
+  const d = rollTwo();
+  // quick animation
+  for(let i=0;i<6;i++){
+    G.dice = [1+Math.floor(Math.random()*6), 1+Math.floor(Math.random()*6)];
+    renderDice();
+    await sleep(70);
+  }
+  G.dice = [d.a, d.b];
+  renderDice();
+  await sleep(250);
+
+  if(d.isDouble){ p.consecDoubles++; } else { p.consecDoubles = 0; }
+  log(`${p.name}님이 주사위 ${d.a}, ${d.b} (합계 ${d.total})을 굴렸습니다.`);
+
+  if(p.consecDoubles>=3){
+    p.consecDoubles = 0;
+    log(`${p.name}님, 더블이 3번 연속! 무인도로 보내집니다.`);
+    sendToIsland(p);
+    renderAll();
+    await endOfAction(p, false);
+    return;
+  }
+
+  const startPos = p.position;
+  const steps = d.total;
+  for(let s=1;s<=steps;s++){
+    p.position = (startPos + s) % 40;
+    renderTokens();
+    await sleep(140);
+  }
+  if(startPos + steps >= 40){ p.cash += PASS_GO_BONUS; log(`${p.name}님이 출발 지점을 지나 ${FMT(PASS_GO_BONUS)}를 받았습니다.`); }
+  if(p.position===0){ p.cash += PASS_GO_BONUS; log(`${p.name}님이 출발 지점에 정확히 도착해 보너스를 추가로 받았습니다!`); }
+  renderAll();
+
+  await resolveLanding(p, d.isDouble);
+}
+
+async function resolveLanding(player, isDouble){
+  const i = player.position;
+  const t = TILES[i];
+  log(`${player.name}님이 [${t.icon} ${t.name}] 칸에 도착했습니다.`);
+  renderAll();
+
+  if(t.type==='go' || t.type==='chance' && false){ /* noop */ }
+
+  if(t.type==='city' || t.type==='airport' || t.type==='utility'){
+    await resolvePropertyLanding(player, i, t);
+  } else if(t.type==='chance'){
+    await drawGoldenKey(player);
+  } else if(t.type==='tax'){
+    await resolveTax(player, t);
+  } else if(t.type==='island'){
+    sendToIsland(player);
+  } else if(t.type==='worldtour'){
+    await resolveWorldTour(player);
+  } else if(t.type==='socialfund'){
+    if(G.pot>0){ log(`${player.name}님이 사회복지기금 ${FMT(G.pot)}를 모두 받았습니다!`); player.cash += G.pot; G.pot = 0; }
+    else{ log('사회복지기금이 비어있습니다.'); }
+  } else if(t.type==='go'){
+    // nothing extra
+  }
+  renderAll();
+  await endOfAction(player, isDouble);
+}
+
+async function endOfAction(player, isDouble){
+  checkBankruptAndRemove();
+  if(checkWinByElimination()) return;
+  if(player.bankrupt){ await nextTurn(); return; }
+  if(player.inIsland){ await nextTurn(); return; }
+  if(isDouble){
+    log(`${player.name}님, 더블이라 한 번 더 굴릴 수 있습니다!`);
+    G.phase = 'idle';
+    renderAll();
+    if(!player.human){ await sleep(500); await aiTakeTurn(player); }
+    return;
+  }
+  G.phase = player.human ? 'postroll' : 'idle';
+  renderAll();
+  if(!player.human){ await sleep(400); await aiMaybeBuild(player); await sleep(300); await nextTurn(); }
+}
+
+document.getElementById('rollBtn').addEventListener('click', ()=>{ if(G && G.phase==='idle') doRoll(); });
+document.getElementById('endTurnBtn').addEventListener('click', async ()=>{
+  const p = currentPlayer();
+  if(p && p.human && G.phase==='postroll'){ await nextTurn(); }
+});
+
+async function nextTurn(){
+  const prevIdx = G.turnIdx;
+  let tries = 0;
+  do{
+    G.turnIdx = (G.turnIdx+1) % G.players.length;
+    tries++;
+    if(G.turnIdx===0) G.lap++;
+  } while(G.players[G.turnIdx].bankrupt && tries<=G.players.length+1);
+
+  if(checkGameEndByLaps()) return;
+
+  const p = currentPlayer();
+  p.consecDoubles = 0;
+  G.phase = 'idle';
+  renderAll();
+  if(p.inIsland){
+    if(p.human){ showIslandModal(p); }
+    else{ await sleep(400); await aiHandleIsland(p); }
+    return;
+  }
+  if(!p.human){ await sleep(500); await aiTakeTurn(p); }
+}
+
+function maybeAutoplay(){
+  const p = currentPlayer();
+  if(p && !p.human){ setTimeout(()=>aiTakeTurn(p), 700); }
+  if(p && p.inIsland && p.human){ showIslandModal(p); }
+}
+
+/* =========================================================
+   PROPERTY LANDING (buy / pay toll)
+========================================================= */
+async function resolvePropertyLanding(player, i, t){
+  const ts = G.tileState[i];
+  if(ts.owner==null){
+    if(player.human){ await showBuyModal(player, i, t); }
+    else{ aiHandleBuy(player, i, t); }
+    return;
+  }
+  if(ts.owner===player.id) return; // own property, nothing happens
+  if(ts.mortgaged) { log(`${t.name}은 저당 중이라 통행료가 없습니다.`); return; }
+  const owner = G.players.find(p=>p.id===ts.owner);
+  let toll = 0;
+  if(t.type==='city'){
+    toll = t.price * LEVEL_MULT[ts.level];
+    if(ts.landmark) toll = t.price * LANDMARK_MULT;
+    else if(ts.level===0 && ownsFullGroup(owner, t.group)) toll *= 2;
+  } else if(t.type==='airport'){
+    toll = AIRPORT_RENT[playerOwnedAirports(owner)] || 0;
+  } else if(t.type==='utility'){
+    const diceSum = G.dice[0]+G.dice[1];
+    const cnt = playerOwnedUtilities(owner);
+    toll = diceSum * (cnt>=2 ? 500000 : 200000);
+  }
+  log(`${player.name}님이 ${owner.name}님에게 통행료 ${FMT(toll)}를 지불합니다.`);
+  await payOut(player, toll, owner);
+}
+
+async function showBuyModal(player, i, t){
+  return new Promise(resolve=>{
+    openModal(`
+      <h3>${t.icon} ${t.name}</h3>
+      <p>이 땅은 주인이 없습니다. 가격: <b>${FMT(t.price)}</b></p>
+      <p>현재 보유 현금: ${FMT(player.cash)}</p>
+      <div class="mrow">
+        <button class="neutral" id="mSkip">구매 안함</button>
+        <button class="good" id="mBuy" ${player.cash<t.price?'disabled':''}>구매하기</button>
+      </div>
+    `);
+    document.getElementById('mSkip').onclick = ()=>{ closeModal(); resolve(); };
+    document.getElementById('mBuy').onclick = ()=>{
+      player.cash -= t.price;
+      G.tileState[i].owner = player.id;
+      log(`${player.name}님이 ${t.name}을 ${FMT(t.price)}에 구매했습니다.`);
+      closeModal(); renderAll(); resolve();
+    };
+  });
+}
+
+function aiHandleBuy(player, i, t){
+  const buffer = t.type==='city' ? START_POS_BUFFER : 1000000;
+  if(player.cash - t.price >= buffer){
+    player.cash -= t.price;
+    G.tileState[i].owner = player.id;
+    log(`${player.name}님이 ${t.name}을 ${FMT(t.price)}에 구매했습니다.`);
+  } else {
+    log(`${player.name}님이 ${t.name} 구매를 포기했습니다.`);
+  }
+}
+
+/* =========================================================
+   TAX
+========================================================= */
+async function resolveTax(player, t){
+  if(t.taxType==='luxury'){
+    log(`${player.name}님이 특별세 ${FMT(LUXURY_TAX_FLAT)}를 납부합니다.`);
+    await payOut(player, LUXURY_TAX_FLAT, null);
+    return;
+  }
+  const pct = Math.round(netWorth(player)*0.1);
+  if(player.human){
+    return new Promise(resolve=>{
+      openModal(`
+        <h3>💰 소득세</h3>
+        <p>소득세를 어떻게 납부하시겠습니까?</p>
+        <div class="mrow">
+          <button class="neutral" id="mFlat">고정 ${FMT(INCOME_TAX_FLAT)}</button>
+          <button class="neutral" id="mPct">순자산의 10% (${FMT(pct)})</button>
+        </div>
+      `);
+      document.getElementById('mFlat').onclick = async ()=>{ closeModal(); await payOut(player, INCOME_TAX_FLAT, null); resolve(); };
+      document.getElementById('mPct').onclick = async ()=>{ closeModal(); await payOut(player, pct, null); resolve(); };
+    });
+  } else {
+    const amt = Math.min(INCOME_TAX_FLAT, pct);
+    log(`${player.name}님이 소득세 ${FMT(amt)}를 납부합니다.`);
+    await payOut(player, amt, null);
+  }
+}
+
+/* =========================================================
+   GOLDEN KEY
+========================================================= */
+async function drawGoldenKey(player){
+  if(G.deck.length===0){ G.deck = G.discard; G.discard = []; G.deck = freshDeck(); }
+  const idx = G.deck.pop();
+  G.discard.push(idx);
+  const card = GOLDEN_KEYS[idx];
+  if(player.human){
+    await new Promise(resolve=>{
+      openModal(`
+        <div class="card-face"><div class="cf-ic">🔑</div><div class="cf-txt">${card.text}</div></div>
+        <div class="mrow"><button class="primary" id="mOk">확인</button></div>
+      `);
+      document.getElementById('mOk').onclick = async ()=>{ closeModal(); await card.fx(player); renderAll(); resolve(); };
+    });
+  } else {
+    log(`${player.name}님이 황금열쇠: "${card.text}"`);
+    await card.fx(player);
+  }
+}
+
+/* =========================================================
+   ISLAND
+========================================================= */
+function sendToIsland(player){
+  player.inIsland = true;
+  player.islandTurns = 0;
+  log(`${player.name}님이 무인도에 갇혔습니다! 🏝️`);
+}
+
+function showIslandModal(player){
+  openModal(`
+    <h3>🏝️ 무인도</h3>
+    <p>${player.name}님은 무인도에 갇혀 있습니다. (쉰 턴: ${player.islandTurns}/${ISLAND_MAX_STUCK_TURNS})</p>
+    <p>보유한 탈출카드: ${player.escapeCards}장</p>
+    <div class="mrow">
+      ${player.escapeCards>0?'<button class="good" id="mCard">탈출카드 사용</button>':''}
+      <button class="good" id="mPay" ${player.cash<ISLAND_ESCAPE_FEE?'disabled':''}>${FMT(ISLAND_ESCAPE_FEE)} 내고 탈출</button>
+      <button class="primary" id="mDice">주사위로 탈출 시도</button>
+    </div>
+  `);
+  if(player.escapeCards>0) document.getElementById('mCard').onclick = ()=>{ player.escapeCards--; player.inIsland=false; closeModal(); log(`${player.name}님이 탈출카드를 사용해 무인도를 벗어났습니다.`); G.phase='idle'; renderAll(); };
+  document.getElementById('mPay').onclick = async ()=>{ closeModal(); player.cash -= ISLAND_ESCAPE_FEE; G.pot += ISLAND_ESCAPE_FEE; player.inIsland=false; log(`${player.name}님이 ${FMT(ISLAND_ESCAPE_FEE)}를 내고 무인도를 탈출했습니다.`); G.phase='idle'; renderAll(); };
+  document.getElementById('mDice').onclick = async ()=>{ closeModal(); await islandDiceTry(player, true); };
+}
+
+async function islandDiceTry(player, interactive){
+  const d = rollTwo();
+  G.dice = [d.a,d.b];
+  renderDice();
+  await sleep(400);
+  if(d.isDouble){
+    player.inIsland = false;
+    log(`${player.name}님이 더블(${d.a},${d.a})을 굴려 무인도를 탈출했습니다!`);
+    G.phase = 'moving';
+    renderAll();
+    const startPos = player.position;
+    for(let s=1;s<=d.total;s++){ player.position=(startPos+s)%40; renderTokens(); await sleep(140); }
+    if(startPos+d.total>=40){ player.cash+=PASS_GO_BONUS; log(`${player.name}님이 출발 지점을 지나 보너스를 받았습니다.`); }
+    renderAll();
+    await resolveLanding(player, false);
+  } else {
+    player.islandTurns++;
+    log(`${player.name}님이 탈출에 실패했습니다. (${d.a}, ${d.b})`);
+    if(player.islandTurns>=ISLAND_MAX_STUCK_TURNS){
+      player.inIsland = false;
+      log(`${player.name}님이 ${ISLAND_MAX_STUCK_TURNS}턴을 쉬어 무인도에서 풀려났습니다.`);
+    }
+    G.phase = 'idle';
+    renderAll();
+    await nextTurn();
+  }
+}
+
+async function aiHandleIsland(player){
+  if(player.escapeCards>0){ player.escapeCards--; player.inIsland=false; log(`${player.name}님이 탈출카드를 사용했습니다.`); G.phase='idle'; renderAll(); await aiTakeTurn(player); return; }
+  if(player.cash >= ISLAND_ESCAPE_FEE + 2000000){
+    player.cash -= ISLAND_ESCAPE_FEE; G.pot += ISLAND_ESCAPE_FEE; player.inIsland=false;
+    log(`${player.name}님이 돈을 내고 무인도를 탈출했습니다.`);
+    G.phase='idle'; renderAll(); await aiTakeTurn(player);
+    return;
+  }
+  await islandDiceTry(player, false);
+}
+
+/* =========================================================
+   WORLD TOUR
+========================================================= */
+async function resolveWorldTour(player){
+  if(player.human){
+    return new Promise(resolve=>{
+      const options = TILES.map((t,i)=>({t,i})).filter(x=>x.i!==20 && x.t.type!=='go');
+      openModal(`
+        <h3>🛫 세계여행</h3>
+        <p>${FMT(WORLDTOUR_FEE)}를 내고 원하는 칸으로 떠날 수 있습니다. 현재 보유 현금: ${FMT(player.cash)}</p>
+        <div class="dest-grid">${options.map(x=>`<button data-go="${x.i}" ${player.cash<WORLDTOUR_FEE?'disabled':''}>${x.t.icon} ${x.t.name}</button>`).join('')}</div>
+        <div class="mrow"><button class="neutral" id="mSkip">여행 포기</button></div>
+      `);
+      document.getElementById('mSkip').onclick = ()=>{ closeModal(); resolve(); };
+      document.querySelectorAll('[data-go]').forEach(b=>{
+        b.onclick = async ()=>{
+          const dest = +b.dataset.go;
+          closeModal();
+          player.cash -= WORLDTOUR_FEE;
+          teleportTo(player, dest);
+          log(`${player.name}님이 ${FMT(WORLDTOUR_FEE)}를 내고 ${TILES[dest].name}으로 여행을 떠났습니다.`);
+          renderAll();
+          await resolveLanding(player, false);
+          resolve();
+        };
+      });
+    });
+  } else {
+    if(player.cash < WORLDTOUR_FEE + 1000000) return;
+    const buyables = TILES.map((t,i)=>({t,i})).filter(x=>(x.t.type==='city'||x.t.type==='airport'||x.t.type==='utility') && G.tileState[x.i].owner==null);
+    let dest;
+    if(buyables.length){ dest = buyables.sort((a,b)=>b.t.price-a.t.price)[0].i; }
+    else { dest = 1+Math.floor(Math.random()*38); }
+    player.cash -= WORLDTOUR_FEE;
+    teleportTo(player, dest);
+    log(`${player.name}님이 세계여행으로 ${TILES[dest].name}으로 이동했습니다.`);
+    renderAll();
+    await resolveLanding(player, false);
+  }
+}
+
+/* =========================================================
+   BUILD / MORTGAGE
+========================================================= */
+function openBuildModal(i){
+  const t = TILES[i]; const ts = G.tileState[i]; const player = currentPlayer();
+  if(ts.owner!==player.id) return;
+  const fullGroup = ownsFullGroup(player, t.group);
+  let body = `<h3>🏗️ ${t.name} 건설</h3>`;
+  if(!fullGroup){
+    body += `<p>이 대륙(${groupOf(t.group).name})의 도시를 모두 소유해야 건물을 지을 수 있습니다.</p><div class="mrow"><button class="neutral" id="mClose">닫기</button></div>`;
+    openModal(body);
+    document.getElementById('mClose').onclick = closeModal;
+    return;
+  }
+  if(ts.mortgaged){
+    body += `<p>저당 중인 땅에는 건설할 수 없습니다. 먼저 저당을 해제하세요.</p><div class="mrow"><button class="neutral" id="mClose">닫기</button></div>`;
+    openModal(body);
+    document.getElementById('mClose').onclick = closeModal;
+    return;
+  }
+  const canLandmark = ts.level===3 && !ts.landmark && groupTiles(t.group).every(gi=>G.tileState[gi].level===3 && G.tileState[gi].owner===player.id) && !groupTiles(t.group).some(gi=>G.tileState[gi].landmark);
+  if(ts.landmark){
+    body += `<p>이미 ★랜드마크가 세워져 있습니다. 최고 단계입니다!</p>`;
+  } else if(ts.level<3){
+    const cost = Math.round(t.price*BUILD_COST_MULT[ts.level]);
+    const nextLabel = LEVEL_LABEL[ts.level+1];
+    body += `<p>현재 단계: ${LEVEL_LABEL[ts.level]}</p><p>다음 단계(${nextLabel}) 건설 비용: ${FMT(cost)}</p>`;
+    body += `<div class="mrow"><button class="good" id="mBuild" ${player.cash<cost?'disabled':''}>${nextLabel} 짓기</button><button class="neutral" id="mClose">닫기</button></div>`;
+  } else if(canLandmark){
+    const cost = Math.round(t.price*BUILD_COST_MULT[3]);
+    body += `<p>이 대륙의 모든 도시가 호텔입니다! 이곳에 ★랜드마크를 세울 수 있습니다.</p><p>건설 비용: ${FMT(cost)}</p>`;
+    body += `<div class="mrow"><button class="good" id="mLandmark" ${player.cash<cost?'disabled':''}>★랜드마크 짓기</button><button class="neutral" id="mClose">닫기</button></div>`;
+  } else {
+    body += `<p>호텔 단계입니다. 대륙 내 다른 도시도 모두 호텔이 되면 랜드마크를 지을 수 있습니다.</p><div class="mrow"><button class="neutral" id="mClose">닫기</button></div>`;
+  }
+  openModal(body);
+  const closeBtn = document.getElementById('mClose'); if(closeBtn) closeBtn.onclick = closeModal;
+  const buildBtn = document.getElementById('mBuild');
+  if(buildBtn) buildBtn.onclick = ()=>{
+    const cost = Math.round(t.price*BUILD_COST_MULT[ts.level]);
+    player.cash -= cost; ts.level++;
+    log(`${player.name}님이 ${t.name}에 ${LEVEL_LABEL[ts.level]}을 건설했습니다. (${FMT(cost)})`);
+    closeModal(); renderAll();
+  };
+  const lmBtn = document.getElementById('mLandmark');
+  if(lmBtn) lmBtn.onclick = ()=>{
+    const cost = Math.round(t.price*BUILD_COST_MULT[3]);
+    player.cash -= cost; ts.landmark = true;
+    log(`${player.name}님이 ${t.name}에 ★랜드마크를 건설했습니다! (${FMT(cost)})`);
+    closeModal(); renderAll();
+  };
+}
+
+function doMortgage(i){
+  const t = TILES[i]; const ts = G.tileState[i]; const player = currentPlayer();
+  if(ts.owner!==player.id || ts.mortgaged || ts.level>0 || ts.landmark) return;
+  const amt = Math.round(t.price*MORTGAGE_RATE);
+  ts.mortgaged = true;
+  player.cash += amt;
+  log(`${player.name}님이 ${t.name}을 저당 잡혀 ${FMT(amt)}를 받았습니다.`);
+  renderAll();
+}
+function doUnmortgage(i){
+  const t = TILES[i]; const ts = G.tileState[i]; const player = currentPlayer();
+  if(ts.owner!==player.id || !ts.mortgaged) return;
+  const amt = Math.round(t.price*MORTGAGE_RATE*UNMORTGAGE_INTEREST);
+  if(player.cash<amt){ return; }
+  player.cash -= amt;
+  ts.mortgaged = false;
+  log(`${player.name}님이 ${t.name}의 저당을 해제했습니다. (${FMT(amt)})`);
+  renderAll();
+}
+
+async function aiMaybeBuild(player){
+  for(let attempt=0; attempt<3; attempt++){
+    let didSomething = false;
+    for(const gr of GROUPS){
+      if(!ownsFullGroup(player, gr.id)) continue;
+      const tiles = groupTiles(gr.id).map(i=>({i, t:TILES[i], ts:G.tileState[i]})).filter(x=>!x.ts.mortgaged);
+      // build landmark opportunity
+      const allHotel = tiles.every(x=>x.ts.level===3) && !tiles.some(x=>x.ts.landmark) && tiles.length>0;
+      if(allHotel){
+        const target = tiles[0];
+        const cost = Math.round(target.t.price*BUILD_COST_MULT[3]);
+        if(player.cash - cost >= 2000000){
+          player.cash -= cost; target.ts.landmark = true;
+          log(`${player.name}님이 ${target.t.name}에 ★랜드마크를 건설했습니다.`);
+          didSomething = true; continue;
+        }
+      }
+      // else raise the cheapest-to-upgrade tile
+      const upgradable = tiles.filter(x=>x.ts.level<3 && !x.ts.landmark).sort((a,b)=>a.ts.level-b.ts.level);
+      if(upgradable.length){
+        const target = upgradable[0];
+        const cost = Math.round(target.t.price*BUILD_COST_MULT[target.ts.level]);
+        if(player.cash - cost >= 3000000){
+          player.cash -= cost; target.ts.level++;
+          log(`${player.name}님이 ${target.t.name}에 ${LEVEL_LABEL[target.ts.level]}을 건설했습니다.`);
+          didSomething = true;
+        }
+      }
+    }
+    if(!didSomething) break;
+    renderAll();
+    await sleep(250);
+  }
+}
+
+/* =========================================================
+   PAYMENT / BANKRUPTCY
+========================================================= */
+async function payOut(payer, amount, creditor){
+  amount = Math.round(amount);
+  if(payer.cash >= amount){
+    payer.cash -= amount;
+    if(creditor) creditor.cash += amount; else G.pot += amount;
+    return true;
+  }
+  // need to raise funds
+  if(payer.human){
+    await handleShortfallHuman(payer, amount, creditor);
+  } else {
+    handleShortfallAI(payer, amount, creditor);
+  }
+  return payer.cash >= 0;
+}
+
+function unmortgagedOwnedSorted(player){
+  return TILES.map((t,i)=>({t,i,ts:G.tileState[i]})).filter(x=>x.ts && x.ts.owner===player.id && !x.ts.mortgaged && x.ts.level===0 && !x.ts.landmark)
+    .sort((a,b)=>a.t.price-b.t.price);
+}
+
+function handleShortfallAI(payer, amount, creditor){
+  let need = amount - payer.cash;
+  const mortgageable = unmortgagedOwnedSorted(payer);
+  for(const x of mortgageable){
+    if(need<=0) break;
+    const amt = Math.round(x.t.price*MORTGAGE_RATE);
+    x.ts.mortgaged = true; payer.cash += amt; need -= amt;
+    log(`${payer.name}님이 ${x.t.name}을 저당 잡혔습니다. (${FMT(amt)})`);
+  }
+  if(payer.cash >= amount){ payer.cash -= amount; if(creditor) creditor.cash += amount; else G.pot += amount; }
+  else{ declareBankrupt(payer, creditor); }
+}
+
+async function handleShortfallHuman(payer, amount, creditor){
+  return new Promise(resolve=>{
+    function render(){
+      const need = amount - payer.cash;
+      const props = unmortgagedOwnedSorted(payer);
+      let body = `<h3>⚠️ 자금 부족</h3><p>${FMT(amount)}를 지불해야 하지만 현금이 ${FMT(payer.cash)}뿐입니다. 부족분: ${FMT(Math.max(0,need))}</p>`;
+      if(props.length){
+        body += `<p>땅을 저당 잡혀 현금을 마련할 수 있습니다:</p><div class="dest-grid">`;
+        props.forEach(x=>{ body += `<button data-mg="${x.i}">${x.t.name}<br>+${FMT(Math.round(x.t.price*MORTGAGE_RATE))}</button>`; });
+        body += `</div>`;
+      } else {
+        body += `<p>저당 잡힐 수 있는 땅이 없습니다.</p>`;
+      }
+      body += `<div class="mrow">
+        <button class="good" id="mPayNow" ${payer.cash<amount?'disabled':''}>지금 지불</button>
+        <button class="bad" id="mBankrupt">파산 선언</button>
+      </div>`;
+      openModal(body);
+      document.querySelectorAll('[data-mg]').forEach(b=>{
+        b.onclick = ()=>{
+          const i = +b.dataset.mg; const t=TILES[i]; const ts=G.tileState[i];
+          const amt = Math.round(t.price*MORTGAGE_RATE);
+          ts.mortgaged = true; payer.cash += amt;
+          log(`${payer.name}님이 ${t.name}을 저당 잡혔습니다. (${FMT(amt)})`);
+          renderAll(); render();
+        };
+      });
+      document.getElementById('mPayNow').onclick = ()=>{
+        payer.cash -= amount;
+        if(creditor) creditor.cash += amount; else G.pot += amount;
+        closeModal(); renderAll(); resolve();
+      };
+      document.getElementById('mBankrupt').onclick = ()=>{
+        closeModal(); declareBankrupt(payer, creditor); renderAll(); resolve();
+      };
+    }
+    render();
+  });
+}
+
+function declareBankrupt(player, creditor){
+  log(`💀 ${player.name}님이 파산했습니다!`);
+  player.bankrupt = true;
+  TILES.forEach((t,i)=>{
+    const ts = G.tileState[i];
+    if(ts && ts.owner===player.id){
+      if(creditor && !creditor.bankrupt){
+        ts.owner = creditor.id;
+        log(`${t.name}이 ${creditor.name}님에게 넘어갔습니다.`);
+      } else {
+        ts.owner = null; ts.level = 0; ts.mortgaged=false; ts.landmark=false;
+        log(`${t.name}이 은행으로 반환되었습니다.`);
+      }
+    }
+  });
+  if(creditor) creditor.cash += Math.max(0, player.cash);
+  player.cash = 0;
+}
+
+function checkBankruptAndRemove(){
+  // placeholder for future chained checks; bankruptcy itself is handled at payOut time
+}
+
+function checkWinByElimination(){
+  const alive = activePlayers();
+  if(alive.length<=1 && G.players.length>1){
+    showGameOver(alive);
+    return true;
+  }
+  return false;
+}
+
+function checkGameEndByLaps(){
+  if(G.maxLaps>0 && G.lap>=G.maxLaps){
+    showGameOver(activePlayers());
+    return true;
+  }
+  return false;
+}
+
+function showGameOver(alive){
+  const ranking = [...G.players].sort((a,b)=>{
+    if(a.bankrupt!==b.bankrupt) return a.bankrupt?1:-1;
+    return netWorth(b)-netWorth(a);
+  });
+  let body = `<h3>🏆 게임 종료!</h3>`;
+  ranking.forEach((p,idx)=>{
+    body += `<div class="gameover-rank"><div class="rk">${idx+1}</div><div>${p.token} <b>${p.name}</b>${p.bankrupt?' (파산)':''}</div><div style="margin-left:auto;font-weight:700;">${FMT(netWorth(p))}</div></div>`;
+  });
+  body += `<div class="mrow"><button class="primary" id="mNew">새 게임 시작</button></div>`;
+  openModal(body);
+  document.getElementById('mNew').onclick = ()=>{ localStorage.removeItem(SAVE_KEY); closeModal(); location.reload(); };
+  G.phase = 'gameover';
+  saveGame();
+}
+
+/* =========================================================
+   AI TURN LOOP
+========================================================= */
+async function aiTakeTurn(player){
+  if(player.bankrupt) return;
+  if(G.phase==='gameover') return;
+  if(player.inIsland){ await aiHandleIsland(player); return; }
+  G.phase = 'idle';
+  await sleep(300);
+  await doRoll();
+}
+
+/* =========================================================
+   INIT
+========================================================= */
+window.addEventListener('beforeunload', ()=>{ if(G) saveGame(); });
+</script>
+</body>
+</html>
