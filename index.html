@@ -87,20 +87,22 @@ img,svg{max-width:100%;}
 .tile{position:relative;border:1px solid var(--board-line);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;overflow:hidden;background:var(--board);padding:2px;cursor:default;}
 .tile.corner{display:flex;align-items:center;justify-content:center;background:#efe4bf;}
 .tile .band{position:absolute;top:0;left:0;right:0;height:24%;}
-.tile .ic{font-size:0.95rem;line-height:1;margin-bottom:1px;}
-.tile .nm{font-size:0.5rem;font-weight:700;color:var(--ink);text-align:center;line-height:1.05;max-width:95%;}
-.tile .pr{font-size:0.42rem;color:#555;margin-top:1px;}
-.tile.corner .nm{font-size:0.6rem;}
+.tile .ic{font-size:1.1rem;line-height:1;margin-bottom:1px;}
+.tile .nm{font-size:0.62rem;font-weight:700;color:var(--ink);text-align:center;line-height:1.08;max-width:96%;}
+.tile .pr{font-size:0.52rem;font-weight:600;color:#444;margin-top:1px;}
+.tile.corner .nm{font-size:0.74rem;}
 .tile.owned{box-shadow:inset 0 0 0 2px var(--owner-color,transparent);}
 .tile .lvbadge{position:absolute;bottom:1px;right:1px;font-size:0.5rem;background:rgba(0,0,0,0.65);color:#fff;border-radius:3px;padding:0 2px;}
 .tile .mortbadge{position:absolute;top:26%;left:1px;font-size:0.48rem;background:#8e2f2f;color:#fff;border-radius:3px;padding:0 2px;}
 .tokens-layer{position:absolute;inset:0;pointer-events:none;}
-.token{position:absolute;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.5);transition:left .25s,top .25s;}
+.token{position:absolute;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;border:2px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,0.55);transition:left .16s ease-out,top .16s ease-out;z-index:5;}
+@keyframes tokenHop{0%{transform:translateY(0) scale(1);}45%{transform:translateY(-55%) scale(1.2);}100%{transform:translateY(0) scale(1);}}
+.token.hop{animation:tokenHop .16s ease-out;}
 
 .center-area{position:absolute;top:9.1%;left:9.1%;width:81.8%;height:81.8%;grid-column:2/11;grid-row:2/11;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:repeating-linear-gradient(135deg,#efe4bf,#efe4bf 14px,#e8dcac 14px,#e8dcac 28px);border:2px dashed var(--gold);border-radius:8px;padding:10px;}
 .logo-mark{font-size:1.4rem;font-weight:800;color:#5a3d12;letter-spacing:2px;}
 .dice-row{display:flex;gap:8px;}
-.die{width:38px;height:38px;background:#fff;border-radius:7px;border:2px solid #333;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:4px;box-shadow:0 2px 6px rgba(0,0,0,0.3);}
+.die{width:38px;height:38px;background:#fff;border-radius:7px;border:2px solid #333;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:4px;box-shadow:0 2px 6px rgba(0,0,0,0.3);transition:transform .09s linear;}
 .die i{border-radius:50%;background:transparent;}
 .die i.on{background:#222;}
 .roll-btn{background:linear-gradient(135deg,var(--gold-light),var(--gold));border:none;border-radius:10px;padding:10px 22px;font-weight:700;color:#1a1300;cursor:pointer;font-size:0.95rem;}
@@ -154,10 +156,13 @@ img,svg{max-width:100%;}
 .gameover-rank .rk{font-weight:800;font-size:1.1rem;width:26px;}
 
 @media (max-width:760px){
-  .tile .nm{font-size:0.42rem;}
-  .tile .pr{display:none;}
+  .tile .nm{font-size:0.5rem;}
+  .tile .pr{font-size:0.4rem;}
+  .tile.corner .nm{font-size:0.6rem;}
   .die{width:30px;height:30px;}
   .logo-mark{font-size:1rem;}
+  .player-slot{flex-wrap:wrap;row-gap:8px;}
+  .slot-name{flex-basis:100%;order:5;min-width:0;}
 }
 </style>
 </head>
@@ -592,7 +597,7 @@ function refreshTileVisuals(){
   });
 }
 
-function renderTokens(){
+function renderTokens(hoppingId){
   const layer = document.getElementById('tokensLayer');
   layer.innerHTML = '';
   const offsets = [[18,18],[62,18],[18,62],[62,62]];
@@ -600,7 +605,7 @@ function renderTokens(){
     if(p.bankrupt) return;
     const pos = tileGridPos(p.position);
     const tok = document.createElement('div');
-    tok.className = 'token';
+    tok.className = 'token' + (p.id===hoppingId ? ' hop' : '');
     tok.style.background = p.color;
     tok.textContent = p.token;
     const colW = 100/11, rowH = 100/11;
@@ -646,9 +651,10 @@ function renderSidePanel(){
       if(myProps.length===0){ propRoot.innerHTML = '<div class="pc-prop-row">보유한 자산이 없습니다.</div>'; }
       myProps.forEach(({t,i})=>{
         const ts = G.tileState[i];
-        const canBuild = isCurrent && p.human && G.phase==='idle' && t.type==='city' && !ts.mortgaged;
-        const canMortgage = isCurrent && p.human && G.phase==='idle' && !ts.mortgaged && ts.level===0 && !ts.landmark;
-        const canUnmortgage = isCurrent && p.human && G.phase==='idle' && ts.mortgaged;
+        const canManage = isCurrent && p.human && (G.phase==='idle' || G.phase==='postroll');
+        const canBuild = canManage && t.type==='city' && !ts.mortgaged;
+        const canMortgage = canManage && !ts.mortgaged && ts.level===0 && !ts.landmark;
+        const canUnmortgage = canManage && ts.mortgaged;
         const row = document.createElement('div');
         row.className = 'pc-prop-row';
         const groupColor = t.group ? groupOf(t.group).color : '#888';
@@ -820,6 +826,24 @@ function teleportTo(player, idx){
 
 async function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
+async function animateDiceRoll(){
+  const die0 = document.getElementById('die0'), die1 = document.getElementById('die1');
+  for(let i=0;i<9;i++){
+    G.dice = [1+Math.floor(Math.random()*6), 1+Math.floor(Math.random()*6)];
+    renderDice();
+    die0.style.transform = `rotate(${Math.round(Math.random()*280-140)}deg)`;
+    die1.style.transform = `rotate(${Math.round(Math.random()*280-140)}deg)`;
+    await sleep(65);
+  }
+}
+function settleDice(a,b){
+  G.dice = [a,b];
+  renderDice();
+  const die0 = document.getElementById('die0'), die1 = document.getElementById('die1');
+  die0.style.transform = 'rotate(0deg)';
+  die1.style.transform = 'rotate(0deg)';
+}
+
 /* =========================================================
    TURN ENGINE
 ========================================================= */
@@ -830,15 +854,9 @@ async function doRoll(){
   G.phase = 'moving';
   renderButtons();
   const d = rollTwo();
-  // quick animation
-  for(let i=0;i<6;i++){
-    G.dice = [1+Math.floor(Math.random()*6), 1+Math.floor(Math.random()*6)];
-    renderDice();
-    await sleep(70);
-  }
-  G.dice = [d.a, d.b];
-  renderDice();
-  await sleep(250);
+  await animateDiceRoll();
+  settleDice(d.a, d.b);
+  await sleep(220);
 
   if(d.isDouble){ p.consecDoubles++; } else { p.consecDoubles = 0; }
   log(`${p.name}님이 주사위 ${d.a}, ${d.b} (합계 ${d.total})을 굴렸습니다.`);
@@ -856,8 +874,8 @@ async function doRoll(){
   const steps = d.total;
   for(let s=1;s<=steps;s++){
     p.position = (startPos + s) % 40;
-    renderTokens();
-    await sleep(140);
+    renderTokens(p.id);
+    await sleep(190);
   }
   if(startPos + steps >= 40){ p.cash += PASS_GO_BONUS; log(`${p.name}님이 출발 지점을 지나 ${FMT(PASS_GO_BONUS)}를 받았습니다.`); }
   if(p.position===0){ p.cash += PASS_GO_BONUS; log(`${p.name}님이 출발 지점에 정확히 도착해 보너스를 추가로 받았습니다!`); }
@@ -909,6 +927,17 @@ async function endOfAction(player, isDouble){
   G.phase = player.human ? 'postroll' : 'idle';
   renderAll();
   if(!player.human){ await sleep(400); await aiMaybeBuild(player); await sleep(300); await nextTurn(); }
+  else{ autoAdvanceTurn(player); }
+}
+
+async function autoAdvanceTurn(player){
+  await sleep(1600);
+  for(let i=0;i<16;i++){
+    if(G.phase!=='postroll' || currentPlayer()!==player) return;
+    const modalOpen = document.getElementById('modalRoot').children.length>0;
+    if(!modalOpen){ await nextTurn(); return; }
+    await sleep(500);
+  }
 }
 
 document.getElementById('rollBtn').addEventListener('click', ()=>{ if(G && G.phase==='idle') doRoll(); });
@@ -1086,16 +1115,16 @@ function showIslandModal(player){
 
 async function islandDiceTry(player, interactive){
   const d = rollTwo();
-  G.dice = [d.a,d.b];
-  renderDice();
-  await sleep(400);
+  await animateDiceRoll();
+  settleDice(d.a, d.b);
+  await sleep(220);
   if(d.isDouble){
     player.inIsland = false;
     log(`${player.name}님이 더블(${d.a},${d.a})을 굴려 무인도를 탈출했습니다!`);
     G.phase = 'moving';
     renderAll();
     const startPos = player.position;
-    for(let s=1;s<=d.total;s++){ player.position=(startPos+s)%40; renderTokens(); await sleep(140); }
+    for(let s=1;s<=d.total;s++){ player.position=(startPos+s)%40; renderTokens(player.id); await sleep(190); }
     if(startPos+d.total>=40){ player.cash+=PASS_GO_BONUS; log(`${player.name}님이 출발 지점을 지나 보너스를 받았습니다.`); }
     renderAll();
     await resolveLanding(player, false);
