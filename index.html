@@ -1139,7 +1139,6 @@ function settleDice(a,b){
 async function doRoll(){
   const p = currentPlayer();
   if(!p || p.bankrupt) return;
-  if(!canIControl(p)) return;
   if(p.inIsland){ return; } // handled via island modal
   G.phase = 'moving';
   renderButtons();
